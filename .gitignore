@@ -1,0 +1,26 @@
+# JavaScript
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Local config and data
+.env
+.env.*
+!.env.example
+apps/server/data/
+apps/firmware/secrets.py
+
+# Trained model weights and training data
+packages/plate-reader/training/datasets/
+packages/plate-reader/training/runs/
+
+# OS and editors
+.DS_Store
+.vscode/
+.idea/

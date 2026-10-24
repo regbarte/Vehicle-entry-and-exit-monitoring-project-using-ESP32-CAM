@@ -1,0 +1,6 @@
+[project]
+name = "plate-reader"
+version = "0.0.0"
+description = "Finds the plate in a photo with a trained model, reads it with Tesseract, and normalizes the text."
+requires-python = ">=3.12"
+dependencies = []

@@ -1,0 +1,5 @@
+{
+  "name": "guardhouse-vehicle-monitor",
+  "private": true,
+  "packageManager": "pnpm@12.3.4"
+}

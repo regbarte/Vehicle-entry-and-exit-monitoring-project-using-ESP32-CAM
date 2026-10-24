@@ -1,0 +1,6 @@
+[project]
+name = "guardhouse-server"
+version = "0.0.0"
+description = "FastAPI server: receives camera photos, reads plates, stores entries in MongoDB."
+requires-python = ">=3.12"
+dependencies = []
