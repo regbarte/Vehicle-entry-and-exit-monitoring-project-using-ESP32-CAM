@@ -16,7 +16,7 @@ _Avoid_: Supervisor, superuser
 
 **House**:
 A home in the subdivision, identified by its block and lot.
-_Avoid_: Household, residence, unit, property
+_Avoid_: Household, unit, property
 
 **Owner**:
 The registered owner of a house, or the representative the owner named.
@@ -25,7 +25,7 @@ _Avoid_: Homeowner, resident, member
 ### Vehicles
 
 **Registry**:
-The community's list of registered vehicles. The team loads it from a seed file; the guard can only search it.
+The community's list of houses, each with its owner and at most one registered vehicle. The team loads it from a seed file; the guard can only search it.
 _Avoid_: Masterlist, database
 
 **Registered vehicle**:
@@ -77,7 +77,11 @@ _Avoid_: Queue, backlog
 Why a visitor is entering: delivery, guest, service, or other.
 
 **Destination**:
-Where a visitor is going: a block or a house. Delivery riders usually give a block; guests give a house.
+Where a visitor is going: a block or a residence. Delivery riders usually give a block; guests usually give a residence.
+
+**Residence**:
+A house named as a visitor's destination, picked from the registry and shown with the owner's family name, for example "Dela Cruz Residence".
+_Avoid_: Residency
 
 **ID photo**:
 A webcam photo of the visitor's driver's license, or another ID if they have none.

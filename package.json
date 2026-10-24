@@ -1,5 +1,19 @@
 {
   "name": "guardhouse-vehicle-monitor",
   "private": true,
-  "packageManager": "pnpm@12.3.4"
+  "packageManager": "bun@1.4.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "gen:types": "turbo run gen:types"
+  },
+  "devDependencies": {
+    "turbo": "^2.11.10"
+  }
 }

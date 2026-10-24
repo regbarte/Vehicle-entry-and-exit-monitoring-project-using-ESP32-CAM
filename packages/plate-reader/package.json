@@ -1,0 +1,10 @@
+{
+  "name": "@guardhouse/plate-reader",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "test": "uv run pytest",
+    "lint": "uv run ruff check . && uv run pyright",
+    "accuracy": "uv run python -m plate_reader.accuracy"
+  }
+}

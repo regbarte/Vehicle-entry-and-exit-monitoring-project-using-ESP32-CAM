@@ -2,5 +2,14 @@
   "name": "@guardhouse/api-types",
   "private": true,
   "version": "0.0.0",
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "gen:types": "openapi-typescript ../../apps/server/openapi.json -o src/schema.ts"
+  },
+  "dependencies": {
+    "@guardhouse/server": "workspace:*"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.0.0"
+  }
 }

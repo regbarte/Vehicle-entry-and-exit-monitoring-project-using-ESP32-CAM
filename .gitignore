@@ -2,12 +2,16 @@
 node_modules/
 dist/
 *.tsbuildinfo
+.turbo/
 
 # Python
 .venv/
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Generated from the server, rebuilt by `bun run gen:types`
+apps/server/openapi.json
 
 # Local config and data
 .env
