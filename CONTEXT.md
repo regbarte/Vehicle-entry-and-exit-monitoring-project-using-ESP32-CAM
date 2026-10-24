@@ -1,21 +1,33 @@
 # Guardhouse vehicle monitor
 
-A camera at a subdivision guardhouse reads the plate of each arriving car. The guard checks the car against the community's registry, and records anyone who is not registered.
+A camera at a subdivision guardhouse reads the plate of each arriving car. The guard checks the car against the subdivision's registry, and records anyone who is not registered. One system serves many subdivisions.
 
 ## Language
 
 ### People and places
 
+**Subdivision**:
+A gated community that uses the system. It has one gate, its own registry and its own entries, and is either active or inactive.
+_Avoid_: Village, community, tenant, site
+
+**Inactive subdivision**:
+A subdivision the provider deactivated. Its guard and HOA officer can still view its records, but cannot save entries or change its registry.
+_Avoid_: Suspended, disabled
+
 **Guard**:
-The security guard on duty at the guardhouse. The main person who uses the dashboard.
+The security guard on duty at a subdivision's guardhouse.
 _Avoid_: Operator, user
 
-**Admin**:
-A second dashboard role. Its duties are not defined yet.
-_Avoid_: Supervisor, superuser
+**HOA officer**:
+An officer or staff member of a subdivision's homeowners' association. Maintains the subdivision's registry and views its entries.
+_Avoid_: Admin, HOA (the association, not the person)
+
+**Provider**:
+The team that built and runs the system for many subdivisions. Sees each subdivision's status and counts, never its houses, entries or photos.
+_Avoid_: Developer (in real estate, the company that built the subdivision), platform admin, admin
 
 **House**:
-A home in the subdivision, identified by its block and lot.
+A home in a subdivision, identified by its block and lot.
 _Avoid_: Household, unit, property
 
 **Owner**:
@@ -25,11 +37,11 @@ _Avoid_: Homeowner, resident, member
 ### Vehicles
 
 **Registry**:
-The community's list of houses, each with its owner and at most one registered vehicle. The team loads it from a seed file; the guard can only search it.
+A subdivision's list of houses, each with its owner and at most one registered vehicle. The HOA officer maintains it; the guard can only search it.
 _Avoid_: Masterlist, database
 
 **Registered vehicle**:
-A car in the registry, tied to one house and its owner. Each house has at most one.
+A car in a subdivision's registry, tied to one house and its owner. Each house has at most one, and a plate appears at most once per subdivision.
 _Avoid_: Resident car, member vehicle, pass
 
 **Visitor**:

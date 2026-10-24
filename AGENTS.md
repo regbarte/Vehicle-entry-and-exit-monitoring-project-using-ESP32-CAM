@@ -1,6 +1,6 @@
 # AGENTS.md
 
-A guardhouse prototype. An ESP32-CAM photographs arriving cars, a laptop server reads the plates, and a dashboard tells the guard whether each car is registered.
+A guardhouse prototype that serves many subdivisions. An ESP32-CAM photographs arriving cars, a laptop server reads the plates, and a dashboard tells the guard whether each car is registered. HOA officers maintain each subdivision's registry, and the provider manages the subdivisions.
 
 ## Read first
 
@@ -12,7 +12,7 @@ A guardhouse prototype. An ESP32-CAM photographs arriving cars, a laptop server 
 
 ```
 apps/
-  dashboard/       Vite + React, the guard's screens
+  dashboard/       Vite + React, the guard, HOA officer and provider screens
   server/          FastAPI, MongoDB access
   firmware/        MicroPython for the ESP32-CAM
 packages/
@@ -28,14 +28,19 @@ JavaScript packages use Bun workspaces, and Turborepo runs tasks across all apps
 ## Rules
 
 - The guard confirms every plate. Never save an entry from a plate reading alone.
-- The registry is the list of houses, each with at most one registered vehicle. It is read-only in the dashboard and loaded from a seed file.
+- Every house and entry belongs to one subdivision. Every query filters by `subdivisionId`; never let one subdivision's screens or routes read another's records.
+- The registry is a subdivision's list of houses, each with at most one registered vehicle. HOA officers maintain it in the dashboard; guards can only search it. There is no seed file.
+- Entries keep a copy of their plate and destination. Editing or removing a house never changes past entries.
+- The provider sees subdivision status and counts only, never houses, entries or photos.
+- An inactive subdivision stays readable, but the server rejects its scans, entries and registry changes.
 - Only visitors have exits.
 - The real product deletes ID photos 30 days after the visitor's exit. The prototype has no sweeper; the team deletes old photos by hand. Don't add automatic deletion without asking.
 - Everything runs on the guardhouse laptop. Don't add cloud services.
-- Use fictional names, plates and IDs in seeds, tests and screenshots.
+- Use fictional names, plates and IDs in tests and screenshots.
 - Don't commit secrets. Wi-Fi credentials go in `apps/firmware/secrets.py` and server settings in `.env`; git ignores both.
-- The server runs one worker process. The waiting list and the event hub live in memory.
-- The guard/admin role is stored in the browser only. It is not security; don't treat it as access control.
+- The server runs one worker process. The waiting lists and the event hub live in memory.
+- The role and subdivision are stored in the browser only. They are not security; don't treat them as access control.
+- Business models, billing and real accounts are out of scope for now.
 
 ## Commands
 
