@@ -1,0 +1,14 @@
+let stream;
+const video=document.getElementById('webcam'), statusText=document.getElementById('camstatus');
+document.getElementById('startcam').onclick=async()=>{
+ try {if(stream)stream.getTracks().forEach(t=>t.stop());stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720}},audio:false});video.srcObject=stream;await video.play();statusText.textContent='Hold the ID steady and click Capture.';}
+ catch(e){statusText.textContent='Webcam unavailable. Use http://localhost:5000, allow camera permission, and close other camera apps.';}
+};
+document.getElementById('capture').onclick=()=>{
+ if(!video.videoWidth){statusText.textContent='Start the webcam and wait for its image first.';return;}
+ const canvas=document.getElementById('canvas');canvas.width=video.videoWidth;canvas.height=video.videoHeight;canvas.getContext('2d').drawImage(video,0,0);
+ const image=canvas.toDataURL('image/jpeg',0.85);document.getElementById('id_image').value=image;
+ const preview=document.getElementById('preview');preview.src=image;preview.hidden=false;statusText.textContent='Photo captured. Check that the text is readable, or retake.';
+};
+document.getElementById('entryform').onsubmit=e=>{if(!document.getElementById('id_image').value){e.preventDefault();statusText.textContent='Capture the ID before allowing entry.';}};
+window.addEventListener('pagehide',()=>{if(stream)stream.getTracks().forEach(t=>t.stop());});
