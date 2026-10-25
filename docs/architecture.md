@@ -109,7 +109,9 @@ POST   .../detections/{id}/confirm       {plate} -> registered: entry saved, hou
 POST   .../entries/visitor               multipart: detectionId, plate, purpose, destination, idPhoto
 POST   .../entries/{id}/return-id
 GET    .../entries?plate=&date=&verdict=
-GET    .../entries/inside
+GET    .../entries/inside                (guard only)
+GET    .../stats/today                   (guard Today: counts, hourly bars)
+GET    .../stats/week                    (HOA Overview: hourly totals, purposes)
 GET    .../houses?q=
 POST   .../houses                        (HOA officer)
 PATCH  .../houses/{id}                   (HOA officer)
@@ -131,9 +133,10 @@ TypeScript types come from the OpenAPI schema. The Turborepo task `gen:types` du
 - Tailwind v4 reads the palette as theme tokens: Shadow Grey #3A2E39, Dark Teal #1E555C, Almond Silk #F4D8CD, and Sandy Clay #EDB183. The app uses no component library.
 - One hook, `useEventStream`, opens the EventSource once and writes events into the TanStack Query cache. Screens use plain `useQuery`. On reconnect, the hook refetches.
 - The root page offers three roles: guard, HOA officer and provider. A guard or HOA officer then picks an active subdivision; the provider goes straight to the subdivisions list. The browser stores the role and subdivision in localStorage only. The API has no auth, so this is not a security control.
-- Guard screens: gate, visitor form, entry log, entry detail, registry lookup.
-- HOA officer screens: houses (add, edit, remove), entry log and Inside now, both read-only.
-- Provider screens: subdivisions list with status and house counts, add and edit a subdivision, deactivate or reactivate it.
+- Guard screens: gate (the landing page), Today, visitor form, entry log, entry detail, registry lookup. Today shows stat tiles (entries today, visitors inside, waiting list), an arc of today's entries split registered vs visitor, entries per hour today, a short Inside now list with Return ID, and the latest five entries.
+- HOA officer screens: Overview (the landing page), houses (add, edit, remove), and today's entry log, read-only. Overview shows registry tiles, recently updated houses, entries per hour of day over the last 7 days, and visitors by purpose over the last 7 days. The HOA officer never sees who is inside right now; their charts show totals only.
+- Provider screens: subdivisions as cards (status, camera, house count, 7-day entries sparkline), add and edit a subdivision, deactivate or reactivate it.
+- Charts use Dark Teal for registered and Sandy Clay for visitors, always with a legend or direct labels.
 - An inactive subdivision shows a banner on every guard and HOA officer screen, and hides the actions that save.
 - The team adds two mp3 files. `apps/dashboard/public/sounds/registered.mp3` is a chime. `apps/dashboard/public/sounds/not-registered.mp3` loops until the guard confirms. HTMLAudioElement plays them. A missing file fails quietly.
 - The ID photo uses `getUserMedia` to reach the laptop webcam. The dashboard draws a frame to a canvas and uploads it as a JPEG. `getUserMedia` needs a secure context, so the guard opens the dashboard on the laptop itself at localhost.
