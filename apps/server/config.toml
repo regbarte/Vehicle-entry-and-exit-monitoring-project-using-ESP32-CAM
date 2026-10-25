@@ -1,0 +1,20 @@
+# Tunables for the gate. Committed; secrets and the Mongo URI go in .env.
+
+# Seconds continuous mode ignores the same plate after seeing it. A manual Scan
+# always creates a detection.
+repeat_window_seconds = 30
+
+# Seconds between photos in continuous mode (a later feature).
+continuous_interval_seconds = 1.0
+
+# Resolution the camera's /capture uses: UXGA (1600x1200) or SVGA (800x600).
+capture_resolution = "UXGA"
+
+# Edits a registered plate may differ from the plate reading and still be offered.
+near_match_distance = 1
+
+# Seconds between camera /status checks. Two misses in a row mark it offline.
+camera_poll_seconds = 5.0
+
+# Use the fake camera and fake plate reader instead of the ESP32-CAM.
+mock_camera = true

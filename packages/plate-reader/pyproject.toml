@@ -3,4 +3,17 @@ name = "plate-reader"
 version = "0.0.0"
 description = "Finds the plate in a photo with a trained model, reads it with Tesseract, and normalizes the text."
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "rapidfuzz>=3.14.6",
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.414",
+    "pytest>=9.1.1",
+    "ruff>=0.17.2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
