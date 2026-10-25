@@ -51,15 +51,15 @@ _Avoid_: Guest (that is a purpose), unregistered, outsider
 ### At the gate
 
 **Scan**:
-The guard's request for one photo from the gate camera.
+The guard's request for one photo from the gate camera. The backup for a car that continuous mode missed.
 _Avoid_: Capture, snap
 
 **Continuous mode**:
-A setting in which the gate camera sends a photo about once a second and the system looks for plates on its own.
+The normal way the gate works: the gate camera sends a photo about once a second and the system looks for plates on its own.
 _Avoid_: Auto mode, live detection
 
 **Detection**:
-One photo in which the system found a plate and read it, started by a scan or by continuous mode.
+One car's plate, found and read by the system. In continuous mode it combines the readings from several photos of the same car; a scan uses one photo.
 _Avoid_: Hit, scan result
 
 **Plate reading**:

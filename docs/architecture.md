@@ -31,6 +31,7 @@ Laptop webcam --------------------------> Dashboard (laptop browser)
 - `GET /preview` returns a small frame, QVGA or VGA. The live view uses it.
 - `GET /status` returns uptime and Wi-Fi signal.
 - The flash LED stays off.
+- The camera is mounted at a fixed spot where cars slow down or stop, aimed so each plate appears at about the same size and angle. Training photos come from the same spot.
 - The camera answers at the hostname `guardcam.local` (mDNS). Each subdivision stores its camera's address, which the provider sets.
 - Wi-Fi credentials live in `apps/firmware/secrets.py`. Git ignores that file.
 
@@ -38,8 +39,10 @@ Laptop webcam --------------------------> Dashboard (laptop browser)
 
 `apps/server` runs FastAPI on Python 3.12.
 
-- A Scan calls `/capture` once. Continuous mode calls it about once a second, from a server timer. Continuous mode is a later feature.
-- Photo resolution is a `config.toml` value. Continuous mode may need SVGA to keep up.
+- Continuous mode is the main mode. A server timer calls `/capture` about once a second for each active subdivision. Photos with no plate are dropped.
+- A car shows up in several photos as it pulls up. After the first photo with a plate, the server reads up to `frames_per_car` photos in a row (default 3), then sends one detection with the plate reading that came up most often. On a tie, it picks the reading the detector was most sure of. If the plate leaves the photo sooner, it sends what it has. The detection keeps the photo of the chosen reading as its frame.
+- A Scan calls `/capture` once and reads that one photo. It is the backup for a car that continuous mode missed.
+- Photo resolution is a `config.toml` value. Continuous mode uses UXGA, one photo a second. Cars stop at the gate before the guard lets them in, so a photo that arrives a little late still shows the plate.
 - Plate reading runs in a thread pool (`run_in_threadpool`), so it does not block the event loop.
 - Live updates reach the dashboard over Server-Sent Events, one stream per subdivision. An in-memory event hub sends them. The event types are `detection`, `entry`, and `camera`.
 - Actions such as confirm and Return ID are plain POST requests.
@@ -48,7 +51,7 @@ Laptop webcam --------------------------> Dashboard (laptop browser)
 - The server polls each active subdivision's camera `/status` every 5 seconds and pushes a `camera` event. Two misses in a row mark that camera offline.
 - Every route under `/api/subdivisions/{sid}` only reads and writes that subdivision's records. For an inactive subdivision, the server rejects scans, entries and registry changes with `409 Conflict`; reads still work.
 - MongoDB access uses PyMongo's async client (`AsyncMongoClient`). Pydantic models describe the data. The same models produce the OpenAPI schema.
-- `config.toml` is committed. It holds the tunables: repeat window, continuous mode interval, photo resolution, and near match distance.
+- `config.toml` is committed. It holds the tunables: repeat window, continuous mode interval, frames per car, photo resolution, and near match distance.
 - `.env` holds `MONGO_URI`. Both files load through `pydantic-settings`.
 - Photos (car frames and ID photos) are files under `apps/server/data/`, which git ignores. MongoDB stores only their paths.
 - In the prototype, the team deletes old photos by hand. The real product needs a sweeper. It deletes ID photos and car frames 30 days after the entry's exit, or 30 days after entry for registered vehicles. This follows the Data Privacy Act (RA 10173).
@@ -60,6 +63,7 @@ Laptop webcam --------------------------> Dashboard (laptop browser)
 
 - Finding the plate region in a photo sits behind a `PlateDetector` interface. The first version uses classical OpenCV (edges and contours).
 - A trained model replaces it later, with no changes elsewhere. The plan has two steps. A pretrained plate detector comes first. Then a YOLO nano model, fine tuned on Philippine plates, is exported to ONNX and run with onnxruntime.
+- The detector returns each plate's box and how sure it is. In continuous mode most photos show an empty gate, so it must return nothing for them. Training photos include the empty gate for this reason.
 - Tesseract (pytesseract) reads the cropped plate. It is limited to letters and digits.
 - Near match: the package normalizes the plate (uppercase, letters and digits only). It treats common OCR confusions as equal (0 and O, 1 and I, 8 and B, 5 and S). Then it accepts registered plates within edit distance 1, using `rapidfuzz`.
 
@@ -156,3 +160,4 @@ TypeScript types come from the OpenAPI schema. The Turborepo task `gen:types` du
 - Plate model training dataset
 - Guardhouse laptop OS
 - Demo accuracy target
+- Small photos to find plates, then one UXGA photo to read them, if UXGA once a second can't keep up
