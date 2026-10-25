@@ -36,5 +36,5 @@ export function homePath(session: Session): string {
   if (!session.subdivisionId) return `/pick/${session.role}`;
   return session.role === "guard"
     ? `/guard/${session.subdivisionId}/gate`
-    : `/hoa/${session.subdivisionId}/houses`;
+    : `/hoa/${session.subdivisionId}/overview`;
 }

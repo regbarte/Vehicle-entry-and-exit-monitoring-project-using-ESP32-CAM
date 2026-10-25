@@ -28,6 +28,8 @@ def test_provider_list_shows_counts_only(client, sid):
         "active": True,
         "cameraOnline": row["cameraOnline"],
         "houseCount": 1,
+        "entriesLast7Days": 0,
+        "dailyEntries": [0] * 7,
     }
 
 
@@ -160,6 +162,68 @@ def test_entry_log_filters(client, sid, monkeypatch):
     assert (
         client.get(f"/api/subdivisions/{sid}/entries", params={"date": "2001-01-01"}).json() == []
     )
+
+
+def confirm_plate(client: TestClient, sid: str, monkeypatch, plate: str) -> dict:
+    detection = scan_with_plate(client, sid, monkeypatch, plate)
+    response = client.post(
+        f"/api/subdivisions/{sid}/detections/{detection['id']}/confirm", json={"plate": plate}
+    )
+    return detection | {"result": response.json()}
+
+
+def save_visitor(client: TestClient, sid: str, monkeypatch, plate: str, purpose: str) -> dict:
+    detection = confirm_plate(client, sid, monkeypatch, plate)
+    response = client.post(
+        f"/api/subdivisions/{sid}/entries/visitor",
+        data={
+            "detectionId": detection["id"],
+            "plate": plate,
+            "purpose": purpose,
+            "destination": json.dumps({"kind": "block", "block": "7"}),
+        },
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def test_today_stats(client, sid, monkeypatch):
+    add_house(client, sid)
+    confirm_plate(client, sid, monkeypatch, "NBC1234")
+    save_visitor(client, sid, monkeypatch, "XYZ9876", "guest")
+    scan_with_plate(client, sid, monkeypatch, "ABC1111")  # left on the waiting list
+    stats = client.get(f"/api/subdivisions/{sid}/stats/today").json()
+    assert {k: stats[k] for k in ("entries", "registered", "visitors", "inside", "waiting")} == {
+        "entries": 2,
+        "registered": 1,
+        "visitors": 1,
+        "inside": 1,
+        "waiting": 1,
+    }
+    assert [h["hour"] for h in stats["byHour"]] == list(range(24))
+    assert sum(h["registered"] + h["visitor"] for h in stats["byHour"]) == 2
+
+
+def test_hourly_and_purpose_stats(client, sid, monkeypatch):
+    save_visitor(client, sid, monkeypatch, "XYZ9876", "delivery")
+    hourly = client.get(f"/api/subdivisions/{sid}/stats/hourly", params={"days": 30}).json()
+    assert hourly["days"] == 30
+    assert sum(h["visitor"] for h in hourly["byHour"]) == 1
+    assert (
+        client.get(f"/api/subdivisions/{sid}/stats/hourly", params={"days": 10}).status_code == 422
+    )
+
+    purposes = client.get(f"/api/subdivisions/{sid}/stats/purposes").json()
+    assert purposes["days"] == 7
+    assert purposes["purposes"][0] == {"purpose": "delivery", "count": 1}
+    assert len(purposes["purposes"]) == 4
+
+
+def test_provider_sees_last_7_days(client, sid, monkeypatch):
+    save_visitor(client, sid, monkeypatch, "XYZ9876", "service")
+    [row] = client.get("/api/subdivisions").json()
+    assert row["entriesLast7Days"] == 1
+    assert row["dailyEntries"] == [0, 0, 0, 0, 0, 0, 1]
 
 
 def test_dismiss_drops_detection(client, sid, monkeypatch):

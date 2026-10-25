@@ -56,7 +56,11 @@ export function EntryDetail() {
           {e.visitor && <Row label="Purpose">{purposeLabel(e.visitor.purpose)}</Row>}
           {e.visitor && (
             <Row label="Exit">
-              {e.visitor.exitAt ? formatDateTime(e.visitor.exitAt) : "Still inside, ID held"}
+              {e.visitor.exitAt
+                ? formatDateTime(e.visitor.exitAt)
+                : role === "guard"
+                  ? "Not yet exited, ID held"
+                  : "Not yet exited"}
             </Row>
           )}
           <Row label="Plate reading">

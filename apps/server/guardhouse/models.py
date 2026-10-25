@@ -36,6 +36,10 @@ class SubdivisionSummary(ApiModel):
     active: bool
     camera_online: bool
     house_count: int
+    entries_last_7_days: int
+    daily_entries: list[int] = Field(
+        description="Entries per day over the last 7 days, oldest first, today last."
+    )
 
 
 class SubdivisionCreate(ApiModel):
@@ -204,3 +208,42 @@ class CameraEvent(ApiModel):
 
 
 GateEvent = Annotated[DetectionEvent | EntryEvent | CameraEvent, Field(discriminator="type")]
+
+
+# Stats: totals only. Days and hours are in the server laptop's local time.
+
+
+class HourCount(ApiModel):
+    hour: Annotated[int, Field(ge=0, le=23)]
+    registered: int
+    visitor: int
+
+
+class TodayStats(ApiModel):
+    """The guard's Today screen."""
+
+    entries: int
+    registered: int
+    visitors: int
+    inside: int = Field(description="Visitors whose held ID has not been returned, from any day.")
+    waiting: int
+    by_hour: list[HourCount] = Field(description="24 rows, hour 0 to 23.")
+
+
+class HourlyStats(ApiModel):
+    """Entries by hour of day over the last `days` days, today included."""
+
+    days: int
+    by_hour: list[HourCount] = Field(description="24 rows, hour 0 to 23.")
+
+
+class PurposeCount(ApiModel):
+    purpose: Purpose
+    count: int
+
+
+class PurposeStats(ApiModel):
+    """Visitors by purpose over the last `days` days, today included, most first."""
+
+    days: int
+    purposes: list[PurposeCount]

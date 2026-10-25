@@ -7,16 +7,8 @@ import {
   useSubdivisions,
   useUpdateSubdivision,
 } from "../../api/queries";
-import {
-  Button,
-  Empty,
-  ErrorNote,
-  Field,
-  Input,
-  Loading,
-  PageHeader,
-  Table,
-} from "../../components/ui";
+import { Sparkline } from "../../components/charts";
+import { Button, Empty, ErrorNote, Field, Input, Loading, PageHeader } from "../../components/ui";
 import { saveSession } from "../../lib/session";
 
 function ProviderShell({ children }: { children: React.ReactNode }) {
@@ -73,17 +65,17 @@ export function Subdivisions() {
           Add the first one to give its guard a gate screen.
         </Empty>
       ) : (
-        <Table head={["Subdivision", "Status", "Camera", "Houses", ""]}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {subdivisions.data?.map((s) => (
-            <SubdivisionRow key={s.id} subdivision={s} />
+            <SubdivisionCard key={s.id} subdivision={s} />
           ))}
-        </Table>
+        </div>
       )}
     </ProviderShell>
   );
 }
 
-function SubdivisionRow({ subdivision: s }: { subdivision: SubdivisionSummary }) {
+function SubdivisionCard({ subdivision: s }: { subdivision: SubdivisionSummary }) {
   const update = useUpdateSubdivision(s.id);
   const toggle = () => {
     const verb = s.active ? "Deactivate" : "Reactivate";
@@ -93,33 +85,43 @@ function SubdivisionRow({ subdivision: s }: { subdivision: SubdivisionSummary })
     if (window.confirm(`${verb} ${s.name}? ${effect}`)) update.mutate({ active: !s.active });
   };
   return (
-    <tr>
-      <td className="px-4 py-3">
-        <p className="font-medium">{s.name}</p>
-        {s.address && <p className="text-xs text-ink-soft">{s.address}</p>}
-        {update.error && <ErrorNote error={update.error} />}
-      </td>
-      <td className="px-4 py-3">
+    <article className="flex flex-col gap-4 rounded-lg border border-line bg-white p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-semibold">{s.name}</h2>
+          {s.address && <p className="text-xs text-ink-soft">{s.address}</p>}
+        </div>
         {s.active ? (
-          <span className="text-teal">Active</span>
+          <span className="rounded-full bg-teal-wash px-2.5 py-0.5 text-xs font-medium text-teal">
+            Active
+          </span>
         ) : (
-          <span className="text-clay-deep">Inactive</span>
+          <span className="rounded-full bg-clay-wash px-2.5 py-0.5 text-xs font-medium text-clay-deep">
+            Inactive
+          </span>
         )}
-      </td>
-      <td className="px-4 py-3">
-        {s.active ? (
-          s.cameraOnline ? (
-            "Online"
-          ) : (
-            "Offline"
-          )
-        ) : (
-          <span className="text-ink-soft">—</span>
-        )}
-      </td>
-      <td className="px-4 py-3 tabular-nums">{s.houseCount}</td>
-      <td className="px-4 py-3 text-right whitespace-nowrap">
-        <Link to={`/provider/${s.id}/edit`} className="mr-2 text-sm text-teal underline">
+      </div>
+      <dl className="grid grid-cols-3 gap-3 text-sm">
+        <div>
+          <dt className="text-xs text-ink-soft">Camera</dt>
+          <dd>{s.active ? (s.cameraOnline ? "Online" : "Offline") : "Not checked"}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-ink-soft">Houses</dt>
+          <dd className="tabular-nums">{s.houseCount}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-ink-soft">Entries, 7 days</dt>
+          <dd className="tabular-nums">{s.entriesLast7Days}</dd>
+        </div>
+      </dl>
+      <Sparkline
+        values={s.dailyEntries}
+        label={`Entries per day over the last 7 days, oldest first: ${s.dailyEntries.join(", ")}.`}
+      />
+      {update.error && <ErrorNote error={update.error} />}
+      <div className="mt-auto flex items-center gap-2">
+        <Link to={`/provider/${s.id}/edit`} className="mr-auto text-sm text-teal underline">
           Edit
         </Link>
         <Button
@@ -129,8 +131,8 @@ function SubdivisionRow({ subdivision: s }: { subdivision: SubdivisionSummary })
         >
           {s.active ? "Deactivate" : "Reactivate"}
         </Button>
-      </td>
-    </tr>
+      </div>
+    </article>
   );
 }
 

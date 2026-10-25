@@ -17,11 +17,20 @@
   --color-teal-deep: #153d42;
   --color-teal-wash: #dceae9;
   --color-almond: #f4d8cd; /* Almond Silk */
-  --color-paper: #fbf3ef;
+  --color-paper: #f8f5ee; /* cream page background, from the design */
   --color-clay: #edb183; /* Sandy Clay */
   --color-clay-deep: #8a4b1d;
   --color-clay-wash: #fbe7d8;
-  --color-line: #e7d3ca;
+  --color-line: #e3dccf;
+
+  /* Names the shadcn chart component expects, mapped onto the palette. */
+  --color-background: #ffffff;
+  --color-foreground: #3a2e39;
+  --color-muted: #f1eee8;
+  --color-muted-foreground: #6b5b69;
+  --color-border: #e3dccf;
+  --color-chart-1: #1e555c; /* registered */
+  --color-chart-2: #edb183; /* visitor */
 }
 
 @layer base {

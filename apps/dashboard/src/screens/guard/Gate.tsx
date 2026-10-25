@@ -248,8 +248,8 @@ function VisitorSavedCard({ entry, onNext }: { entry: Entry; onNext: () => void 
           ? `Block ${entry.visitor.destination.block}`
           : entry.visitor?.destination.label}
         . Keep the ID until they leave, then return it from{" "}
-        <Link to="../inside" className="text-teal underline">
-          Inside now
+        <Link to="../today" className="text-teal underline">
+          Inside now on Today
         </Link>
         .
       </p>

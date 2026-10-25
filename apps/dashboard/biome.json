@@ -13,6 +13,17 @@
       "preset": "recommended"
     }
   },
+  "overrides": [
+    {
+      "includes": ["src/components/chart.tsx"],
+      "linter": {
+        "rules": {
+          "security": { "noDangerouslySetInnerHtml": "off" },
+          "suspicious": { "noArrayIndexKey": "off" }
+        }
+      }
+    }
+  ],
   "assist": {
     "actions": {
       "source": {

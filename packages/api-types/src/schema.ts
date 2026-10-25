@@ -247,7 +247,8 @@ export interface paths {
         };
         /**
          * Inside Now
-         * @description Visitors whose held ID has not been returned, oldest first.
+         * @description Visitors whose held ID has not been returned, oldest first. For the guard's
+         *     screens; the HOA officer's screens don't call it.
          */
         get: operations["inside_now_api_subdivisions__sid__entries_inside_get"];
         put?: never;
@@ -312,6 +313,57 @@ export interface paths {
         head?: never;
         /** Edit House */
         patch: operations["edit_house_api_subdivisions__sid__houses__house_id__patch"];
+        trace?: never;
+    };
+    "/api/subdivisions/{sid}/stats/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Today */
+        get: operations["today_api_subdivisions__sid__stats_today_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/subdivisions/{sid}/stats/hourly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hourly */
+        get: operations["hourly_api_subdivisions__sid__stats_hourly_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/subdivisions/{sid}/stats/purposes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Purposes */
+        get: operations["purposes_api_subdivisions__sid__stats_purposes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
 }
@@ -480,6 +532,28 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** HourCount */
+        HourCount: {
+            /** Hour */
+            hour: number;
+            /** Registered */
+            registered: number;
+            /** Visitor */
+            visitor: number;
+        };
+        /**
+         * HourlyStats
+         * @description Entries by hour of day over the last `days` days, today included.
+         */
+        HourlyStats: {
+            /** Days */
+            days: number;
+            /**
+             * Byhour
+             * @description 24 rows, hour 0 to 23.
+             */
+            byHour: components["schemas"]["HourCount"][];
+        };
         /** House */
         House: {
             /** Id */
@@ -555,6 +629,26 @@ export interface components {
             /** Plate */
             plate?: string | null;
         };
+        /** PurposeCount */
+        PurposeCount: {
+            /**
+             * Purpose
+             * @enum {string}
+             */
+            purpose: "delivery" | "guest" | "service" | "other";
+            /** Count */
+            count: number;
+        };
+        /**
+         * PurposeStats
+         * @description Visitors by purpose over the last `days` days, today included, most first.
+         */
+        PurposeStats: {
+            /** Days */
+            days: number;
+            /** Purposes */
+            purposes: components["schemas"]["PurposeCount"][];
+        };
         /** ResidenceDestination */
         ResidenceDestination: {
             /**
@@ -614,6 +708,13 @@ export interface components {
             cameraOnline: boolean;
             /** Housecount */
             houseCount: number;
+            /** Entrieslast7Days */
+            entriesLast7Days: number;
+            /**
+             * Dailyentries
+             * @description Entries per day over the last 7 days, oldest first, today last.
+             */
+            dailyEntries: number[];
         };
         /** SubdivisionUpdate */
         SubdivisionUpdate: {
@@ -643,6 +744,30 @@ export interface components {
             ownerName: string;
             /** Distance */
             distance: number;
+        };
+        /**
+         * TodayStats
+         * @description The guard's Today screen.
+         */
+        TodayStats: {
+            /** Entries */
+            entries: number;
+            /** Registered */
+            registered: number;
+            /** Visitors */
+            visitors: number;
+            /**
+             * Inside
+             * @description Visitors whose held ID has not been returned, from any day.
+             */
+            inside: number;
+            /** Waiting */
+            waiting: number;
+            /**
+             * Byhour
+             * @description 24 rows, hour 0 to 23.
+             */
+            byHour: components["schemas"]["HourCount"][];
         };
         /** ValidationError */
         ValidationError: {
@@ -1104,7 +1229,7 @@ export interface operations {
         parameters: {
             query?: {
                 plate?: string;
-                /** @description A day in Asia/Manila time */
+                /** @description A day in the server's local time */
                 date?: string | null;
                 verdict?: ("registered" | "visitor") | null;
             };
@@ -1320,6 +1445,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["House"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    today_api_subdivisions__sid__stats_today_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodayStats"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    hourly_api_subdivisions__sid__stats_hourly_get: {
+        parameters: {
+            query?: {
+                /** @description 7 or 30: today plus the days before it. */
+                days?: number;
+            };
+            header?: never;
+            path: {
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HourlyStats"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    purposes_api_subdivisions__sid__stats_purposes_get: {
+        parameters: {
+            query?: {
+                /** @description 7 or 30: today plus the days before it. */
+                days?: number;
+            };
+            header?: never;
+            path: {
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurposeStats"];
                 };
             };
             /** @description Validation Error */

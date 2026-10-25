@@ -16,7 +16,7 @@ import {
   Table,
   VerdictBadge,
 } from "../components/ui";
-import { formatDateTime, manilaToday, purposeLabel } from "../lib/format";
+import { formatDateTime, localToday, purposeLabel } from "../lib/format";
 
 export function destinationText(entry: Entry): string {
   if (entry.verdict === "registered") return entry.houseLabel ?? "";
@@ -25,16 +25,18 @@ export function destinationText(entry: Entry): string {
   return destination.kind === "block" ? `Block ${destination.block}` : destination.label;
 }
 
+/** Guards see any day. HOA officers see today only, read-only. */
 export function EntryLog() {
-  const { sid } = useWorkspace();
+  const { sid, role } = useWorkspace();
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<EntryFilters>({ date: manilaToday() });
-  const entries = useEntries(sid, filters);
+  const todayOnly = role === "hoa";
+  const [filters, setFilters] = useState<EntryFilters>({ date: localToday() });
+  const entries = useEntries(sid, todayOnly ? { ...filters, date: localToday() } : filters);
   const set = (patch: Partial<EntryFilters>) => setFilters((f) => ({ ...f, ...patch }));
 
   return (
     <>
-      <PageHeader title="Entry log" />
+      <PageHeader title={todayOnly ? "Today's entries" : "Entry log"} />
       <div className="mb-4 flex flex-wrap items-end gap-4">
         <Field label="Plate">
           <Input
@@ -44,13 +46,15 @@ export function EntryLog() {
             className="w-40 font-mono uppercase"
           />
         </Field>
-        <Field label="Date">
-          <Input
-            type="date"
-            value={filters.date ?? ""}
-            onChange={(e) => set({ date: e.target.value })}
-          />
-        </Field>
+        {!todayOnly && (
+          <Field label="Date">
+            <Input
+              type="date"
+              value={filters.date ?? ""}
+              onChange={(e) => set({ date: e.target.value })}
+            />
+          </Field>
+        )}
         <Field label="Verdict">
           <Select
             value={filters.verdict ?? ""}
@@ -63,7 +67,7 @@ export function EntryLog() {
             <option value="visitor">Visitors</option>
           </Select>
         </Field>
-        {filters.date && (
+        {!todayOnly && filters.date && (
           <button
             type="button"
             onClick={() => set({ date: "" })}
@@ -102,7 +106,7 @@ export function EntryLog() {
                 {entry.visitor
                   ? entry.visitor.exitAt
                     ? formatDateTime(entry.visitor.exitAt)
-                    : "Inside"
+                    : "Not yet exited"
                   : ""}
               </td>
             </tr>

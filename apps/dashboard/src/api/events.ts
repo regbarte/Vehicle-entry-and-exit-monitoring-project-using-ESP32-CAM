@@ -18,11 +18,13 @@ export function applyEvent(client: QueryClient, sid: string, event: GateEvent) {
       client.setQueryData<Detection[]>(keys.waiting(sid), (list) =>
         applyDetection(list, event.action, event.detection),
       );
+      client.invalidateQueries({ queryKey: keys.statsToday(sid) });
       break;
     case "entry":
       client.setQueryData<Entry>(keys.entry(sid, event.entry.id), event.entry);
       client.invalidateQueries({ queryKey: keys.entries(sid) });
       client.invalidateQueries({ queryKey: keys.inside(sid) });
+      client.invalidateQueries({ queryKey: keys.stats(sid) });
       break;
     case "camera":
       client.setQueryData(keys.camera(sid), event.camera);

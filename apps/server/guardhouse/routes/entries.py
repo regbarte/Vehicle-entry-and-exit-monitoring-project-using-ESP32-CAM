@@ -1,15 +1,15 @@
 """Entries: visitor entries, returning held IDs, the entry log and Inside now."""
 
 import re
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Annotated
-from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from plate_reader import normalize
 from pydantic import TypeAdapter, ValidationError
 
+from guardhouse.clock import start_of_day
 from guardhouse.db import Doc, object_id, to_entry
 from guardhouse.deps import (
     ActiveSubdivisionDep,
@@ -31,7 +31,6 @@ from guardhouse.models import (
 
 router = APIRouter(prefix="/api/subdivisions/{sid}/entries", tags=["entries"])
 
-MANILA = ZoneInfo("Asia/Manila")
 _destination = TypeAdapter(DestinationInput)
 
 
@@ -150,7 +149,7 @@ async def entry_log(
     db: DbDep,
     plate: str = "",
     day: Annotated[
-        date | None, Query(alias="date", description="A day in Asia/Manila time")
+        date | None, Query(alias="date", description="A day in the server's local time")
     ] = None,
     verdict: Verdict | None = None,
 ) -> list[Entry]:
@@ -159,7 +158,7 @@ async def entry_log(
     if normalized := normalize(plate):
         query["plate"] = {"$regex": re.escape(normalized)}
     if day is not None:
-        start = datetime.combine(day, time(), MANILA).astimezone(UTC)
+        start = start_of_day(day)
         query["at"] = {"$gte": start, "$lt": start + timedelta(days=1)}
     if verdict is not None:
         query["verdict"] = verdict
@@ -169,7 +168,8 @@ async def entry_log(
 
 @router.get("/inside")
 async def inside_now(subdivision: SubdivisionDep, db: DbDep) -> list[Entry]:
-    """Visitors whose held ID has not been returned, oldest first."""
+    """Visitors whose held ID has not been returned, oldest first. For the guard's
+    screens; the HOA officer's screens don't call it."""
     cursor = db.entries.find(
         {"subdivisionId": str(subdivision["_id"]), "verdict": "visitor", "visitor.exitAt": None}
     ).sort("at", 1)

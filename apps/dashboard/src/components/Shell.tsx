@@ -19,13 +19,13 @@ export function useWorkspace(): Workspace {
 const NAV: Record<"guard" | "hoa", { to: string; label: string }[]> = {
   guard: [
     { to: "gate", label: "Gate" },
-    { to: "inside", label: "Inside now" },
+    { to: "today", label: "Today" },
     { to: "entries", label: "Entry log" },
     { to: "registry", label: "Registry" },
   ],
   hoa: [
+    { to: "overview", label: "Overview" },
     { to: "houses", label: "Houses" },
-    { to: "inside", label: "Inside now" },
     { to: "entries", label: "Entry log" },
   ],
 };

@@ -93,6 +93,74 @@ export function PageHeader({ title, actions }: { title: string; actions?: ReactN
   );
 }
 
+export function Card({
+  title,
+  actions,
+  children,
+}: {
+  title: string;
+  actions?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="flex flex-col gap-4 rounded-lg border border-line bg-white p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-semibold">{title}</h2>
+        {actions}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+export function StatTile({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: number;
+  note?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1 rounded-lg border border-line bg-white p-5">
+      <span className="text-sm text-ink-soft">{label}</span>
+      <span className="text-3xl font-semibold tabular-nums">{value}</span>
+      {note && <span className="text-xs text-ink-soft">{note}</span>}
+    </div>
+  );
+}
+
+/** Two or more buttons that pick one value, such as 7 or 30 days. */
+export function Segmented<T extends string | number>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <fieldset className="flex gap-1 rounded-md border border-line p-0.5">
+      <legend className="sr-only">{label}</legend>
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          aria-pressed={option.value === value}
+          onClick={() => onChange(option.value)}
+          className={`rounded px-3 py-1 text-xs font-medium ${option.value === value ? "bg-ink text-paper" : "text-ink-soft hover:bg-ink/5"}`}
+        >
+          {option.label}
+        </button>
+      ))}
+    </fieldset>
+  );
+}
+
 export function Empty({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <div className="rounded-lg border border-dashed border-line px-6 py-12 text-center">

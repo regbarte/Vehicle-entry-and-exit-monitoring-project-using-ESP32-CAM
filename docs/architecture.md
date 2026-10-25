@@ -52,7 +52,7 @@ Laptop webcam --------------------------> Dashboard (laptop browser)
 - `.env` holds `MONGO_URI`. Both files load through `pydantic-settings`.
 - Photos (car frames and ID photos) are files under `apps/server/data/`, which git ignores. MongoDB stores only their paths.
 - In the prototype, the team deletes old photos by hand. The real product needs a sweeper. It deletes ID photos and car frames 30 days after the entry's exit, or 30 days after entry for registered vehicles. This follows the Data Privacy Act (RA 10173).
-- Times are stored in UTC and shown in Asia/Manila time.
+- Times are stored in UTC. Days and hours (the entry log's date, "today", the stats windows) use the laptop's local time zone, and the dashboard shows times in local time too.
 
 ## Plate reader
 
@@ -94,7 +94,8 @@ entries: { subdivisionId, at, plate, plateRaw, verdict: "registered" | "visitor"
 Provider routes:
 
 ```text
-GET   /api/subdivisions                -> [{id, name, address, active, cameraOnline, houseCount}]
+GET   /api/subdivisions                -> [{id, name, address, active, cameraOnline, houseCount,
+                                            entriesLast7Days, dailyEntries}]
 POST  /api/subdivisions                {name, address, cameraUrl}
 PATCH /api/subdivisions/{sid}          {name?, address?, cameraUrl?, active?}
 ```
@@ -110,8 +111,9 @@ POST   .../entries/visitor               multipart: detectionId, plate, purpose,
 POST   .../entries/{id}/return-id
 GET    .../entries?plate=&date=&verdict=
 GET    .../entries/inside                (guard only)
-GET    .../stats/today                   (guard Today: counts, hourly bars)
-GET    .../stats/week                    (HOA Overview: hourly totals, purposes)
+GET    .../stats/today                   (guard Today: counts, entries per hour today)
+GET    .../stats/hourly?days=7|30        (HOA Overview: entries by hour of day, by verdict)
+GET    .../stats/purposes?days=7|30      (HOA Overview: visitors by purpose)
 GET    .../houses?q=
 POST   .../houses                        (HOA officer)
 PATCH  .../houses/{id}                   (HOA officer)
@@ -120,6 +122,8 @@ GET    .../camera/preview                (server proxies the camera's /preview)
 GET    .../events                        (SSE)
 GET    /files/...                        (photos)
 ```
+
+A stats window of 7 or 30 days is today plus the days before it, from local midnight. `dailyEntries` is 7 counts, oldest first, today last.
 
 The provider list returns counts and status only, never houses, entries or photos. The API has no auth in the prototype, so this is a convention the dashboard follows, not a control.
 
@@ -130,11 +134,12 @@ TypeScript types come from the OpenAPI schema. The Turborepo task `gen:types` du
 `apps/dashboard` is a Vite app built with React and TypeScript.
 
 - It uses React Router for screens and TanStack Query for data.
-- Tailwind v4 reads the palette as theme tokens: Shadow Grey #3A2E39, Dark Teal #1E555C, Almond Silk #F4D8CD, and Sandy Clay #EDB183. The app uses no component library.
+- Tailwind v4 reads the palette as theme tokens: Shadow Grey #3A2E39, Dark Teal #1E555C, Almond Silk #F4D8CD, and Sandy Clay #EDB183. The page background is cream (#F8F5EE).
+- The app uses no component library, except for charts. Charts use the shadcn/ui chart component (`src/components/chart.tsx`, copied in as shadcn intends) on top of Recharts. `src/components/charts.tsx` holds the dashboard's own charts built on it.
 - One hook, `useEventStream`, opens the EventSource once and writes events into the TanStack Query cache. Screens use plain `useQuery`. On reconnect, the hook refetches.
 - The root page offers three roles: guard, HOA officer and provider. A guard or HOA officer then picks an active subdivision; the provider goes straight to the subdivisions list. The browser stores the role and subdivision in localStorage only. The API has no auth, so this is not a security control.
 - Guard screens: gate (the landing page), Today, visitor form, entry log, entry detail, registry lookup. Today shows stat tiles (entries today, visitors inside, waiting list), an arc of today's entries split registered vs visitor, entries per hour today, a short Inside now list with Return ID, and the latest five entries.
-- HOA officer screens: Overview (the landing page), houses (add, edit, remove), and today's entry log, read-only. Overview shows registry tiles, recently updated houses, entries per hour of day over the last 7 days, visitors by purpose over the last 7 days, and a day-of-week by hour heatmap over the last 4 weeks. The HOA officer never sees who is inside right now; their charts show totals only.
+- HOA officer screens: Overview (the landing page), houses (add, edit, remove), and today's entry log, read-only. Overview shows registry tiles, recently updated houses, entries by hour of day with a 7-day or 30-day switch, and visitors by purpose over the last 7 days. There is no heatmap. The HOA officer has no Inside now list, but the entry log and entry detail show each visitor's exit time, or "Not yet exited". They can't return IDs.
 - Provider screens: subdivisions as cards (status, camera, house count, 7-day entries sparkline), add and edit a subdivision, deactivate or reactivate it.
 - Charts use Dark Teal for registered and Sandy Clay for visitors, always with a legend or direct labels.
 - An inactive subdivision shows a banner on every guard and HOA officer screen, and hides the actions that save.

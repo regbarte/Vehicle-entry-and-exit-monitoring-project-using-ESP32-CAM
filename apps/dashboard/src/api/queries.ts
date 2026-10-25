@@ -10,7 +10,7 @@ import type {
 } from "@guardhouse/api-types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, unwrap } from "./client";
-import { type EntryFilters, keys } from "./keys";
+import { type EntryFilters, keys, type StatsDays } from "./keys";
 
 const path = (sid: string) => ({ path: { sid } });
 
@@ -100,6 +100,7 @@ export function useConfirm(sid: string) {
       if (result.verdict === "registered") {
         dropWaiting(client, sid, detectionId);
         client.invalidateQueries({ queryKey: keys.entries(sid) });
+        client.invalidateQueries({ queryKey: keys.stats(sid) });
       }
     },
   });
@@ -150,6 +151,7 @@ export function useSaveVisitor(sid: string) {
       dropWaiting(client, sid, detectionId);
       client.invalidateQueries({ queryKey: keys.entries(sid) });
       client.invalidateQueries({ queryKey: keys.inside(sid) });
+      client.invalidateQueries({ queryKey: keys.stats(sid) });
     },
   });
 }
@@ -209,7 +211,37 @@ export function useReturnId(sid: string) {
         list?.filter((e) => e.id !== entry.id),
       );
       client.invalidateQueries({ queryKey: keys.entries(sid) });
+      client.invalidateQueries({ queryKey: keys.statsToday(sid) });
     },
+  });
+}
+
+// Stats: totals for the guard's Today and the HOA officer's Overview
+
+export function useTodayStats(sid: string) {
+  return useQuery({
+    queryKey: keys.statsToday(sid),
+    queryFn: () => unwrap(api.GET("/api/subdivisions/{sid}/stats/today", { params: path(sid) })),
+  });
+}
+
+export function useHourlyStats(sid: string, days: StatsDays) {
+  return useQuery({
+    queryKey: keys.statsHourly(sid, days),
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/subdivisions/{sid}/stats/hourly", {
+          params: { path: { sid }, query: { days } },
+        }),
+      ),
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function usePurposeStats(sid: string) {
+  return useQuery({
+    queryKey: keys.statsPurposes(sid),
+    queryFn: () => unwrap(api.GET("/api/subdivisions/{sid}/stats/purposes", { params: path(sid) })),
   });
 }
 
