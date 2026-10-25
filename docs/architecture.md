@@ -134,7 +134,7 @@ TypeScript types come from the OpenAPI schema. The Turborepo task `gen:types` du
 `apps/dashboard` is a Vite app built with React and TypeScript.
 
 - It uses React Router for screens and TanStack Query for data.
-- Tailwind v4 reads the palette as theme tokens: Shadow Grey #3A2E39, Dark Teal #1E555C, Almond Silk #F4D8CD, and Sandy Clay #EDB183. The page background is cream (#F8F5EE).
+- Tailwind v4 reads the palette as theme tokens: Shadow Grey #3A2E39, Dark Teal #1E555C, Almond Silk #F4D8CD, and Sandy Clay #EDB183. The page background is cream (#F8F5EE). Text uses Atkinson Hyperlegible Next, and plates and times use Atkinson Hyperlegible Mono, both self-hosted through Fontsource.
 - The app uses no component library, except for charts. Charts use the shadcn/ui chart component (`src/components/chart.tsx`, copied in as shadcn intends) on top of Recharts. `src/components/charts.tsx` holds the dashboard's own charts built on it.
 - One hook, `useEventStream`, opens the EventSource once and writes events into the TanStack Query cache. Screens use plain `useQuery`. On reconnect, the hook refetches.
 - The root page offers three roles: guard, HOA officer and provider. A guard or HOA officer then picks an active subdivision; the provider goes straight to the subdivisions list. The browser stores the role and subdivision in localStorage only. The API has no auth, so this is not a security control.
