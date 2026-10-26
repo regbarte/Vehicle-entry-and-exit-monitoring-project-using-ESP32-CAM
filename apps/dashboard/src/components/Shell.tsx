@@ -27,6 +27,7 @@ const NAV: Record<"guard" | "hoa", { to: string; label: string }[]> = {
     { to: "overview", label: "Overview" },
     { to: "grid", label: "Grid" },
     { to: "houses", label: "Houses" },
+    { to: "users", label: "Users" },
     { to: "entries", label: "Entry log" },
   ],
 };

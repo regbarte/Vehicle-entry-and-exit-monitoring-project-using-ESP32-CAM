@@ -8,12 +8,23 @@ import { Today } from "./screens/guard/Today";
 import { Grid } from "./screens/hoa/Grid";
 import { Houses } from "./screens/hoa/Houses";
 import { Overview } from "./screens/hoa/Overview";
-import { EditSubdivision, NewSubdivision, Subdivisions } from "./screens/provider/Subdivisions";
+import { Users } from "./screens/hoa/Users";
+import {
+  EditSubdivision,
+  NewSubdivision,
+  SubdivisionOfficers,
+  Subdivisions,
+} from "./screens/provider/Subdivisions";
 import { RolePicker, SubdivisionPicker } from "./screens/RolePicker";
 
 function EditSubdivisionRoute() {
   const { sid = "" } = useParams();
   return <EditSubdivision sid={sid} />;
+}
+
+function SubdivisionOfficersRoute() {
+  const { sid = "" } = useParams();
+  return <SubdivisionOfficers sid={sid} />;
 }
 
 const shared = [
@@ -43,11 +54,13 @@ export const router = createBrowserRouter([
       { path: "overview", element: <Overview /> },
       { path: "grid", element: <Grid /> },
       { path: "houses", element: <Houses /> },
+      { path: "users", element: <Users /> },
       ...shared,
     ],
   },
   { path: "/provider", element: <Subdivisions /> },
   { path: "/provider/new", element: <NewSubdivision /> },
   { path: "/provider/:sid/edit", element: <EditSubdivisionRoute /> },
+  { path: "/provider/:sid/officers", element: <SubdivisionOfficersRoute /> },
   { path: "*", element: <Navigate to="/" replace /> },
 ]);

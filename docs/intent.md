@@ -27,7 +27,7 @@ The guard confirms every plate before an entry is saved.
 One registered vehicle per house, and a plate at most once per subdivision. The registry lists every house, with or without a car. The HOA officer maintains it in the dashboard; it has no expiry dates and is read-only for the guard. There is no seed file.
 Each entry keeps a copy of its plate and destination as they were when saved. Editing or removing a house never changes past entries. Each house shows when it was last updated.
 Only visitors have exits. The real product deletes ID photos 30 days after the visitor's exit (Data Privacy Act, RA 10173). The prototype has no sweeper; the team deletes old photos by hand. Use fictional data in tests and demos.
-Out of scope: gate or barrier control, resident notifications, exits for registered cars, business model and billing, real user accounts.
+Out of scope: gate or barrier control, resident notifications, exits for registered cars, business model and billing, logins and passwords (users are stored, but the role picker still decides who you are).
 
 ## Open questions
 Which dataset trains the plate model: a public plate dataset, our own ESP32-CAM photos, or both?

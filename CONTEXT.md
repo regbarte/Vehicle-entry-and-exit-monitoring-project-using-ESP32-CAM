@@ -26,6 +26,10 @@ _Avoid_: Admin, HOA (the association, not the person)
 The team that built and runs the system for many subdivisions. Sees each subdivision's status and counts, never its houses, entries or photos.
 _Avoid_: Developer (in real estate, the company that built the subdivision), platform admin, admin
 
+**User**:
+A person with an account for one subdivision: a guard or an HOA officer. The provider adds a subdivision's HOA officers; an HOA officer adds its guards and other HOA officers. The prototype stores users without passwords.
+_Avoid_: Member, staff, login
+
 **House**:
 A home in a subdivision, identified by its block and lot.
 _Avoid_: Household, unit, property
