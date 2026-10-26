@@ -22,8 +22,12 @@ class Settings(BaseSettings):
     data_dir: Path = SERVER_DIR / "data"
 
     repeat_window_seconds: int = 30
+    continuous_mode_enabled: bool = True
     continuous_interval_seconds: float = 1.0
     capture_resolution: str = "UXGA"
+    capture_timeout_seconds: float = 20.0
+    flash_dark_threshold: float = 35.0
+    flash_settle_seconds: float = 0.6
     near_match_distance: int = 1
     camera_poll_seconds: float = 5.0
     mock_camera: bool = True

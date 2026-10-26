@@ -22,7 +22,7 @@ The camera is mounted at a fixed spot where cars slow down or stop, so each plat
 The root page is a role picker with no passwords. Guards and HOA officers then pick their subdivision. The role is not a security control.
 The provider sees each subdivision's status and counts, never its houses, entries or photos.
 An inactive subdivision's records stay viewable, but its guard and HOA officer cannot save entries or change the registry.
-MicroPython firmware, Python (FastAPI) server, MongoDB, Vite and React dashboard, OpenCV plate detection behind an interface that a trained model replaces later, with Tesseract OCR.
+Arduino ESP32 firmware, Python (FastAPI) server, MongoDB, Vite and React dashboard, OpenCV plate detection behind an interface that a trained model replaces later, with Tesseract OCR.
 The guard confirms every plate before an entry is saved.
 One registered vehicle per house, and a plate at most once per subdivision. The registry lists every house, with or without a car. The HOA officer maintains it in the dashboard; it has no expiry dates and is read-only for the guard. There is no seed file.
 Each entry keeps a copy of its plate and destination as they were when saved. Editing or removing a house never changes past entries. Each house shows when it was last updated.

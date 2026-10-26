@@ -23,7 +23,9 @@ class NearMatch:
     distance: int
 
 
-def near_matches(reading: str, registered: list[str], max_distance: int = 1) -> list[NearMatch]:
+def near_matches(
+    reading: str, registered: list[str], max_distance: int = 1
+) -> list[NearMatch]:
     """Registered plates within `max_distance` edits of the reading, closest first.
 
     Common OCR confusions count as equal. An exact match has distance 0.
@@ -33,7 +35,9 @@ def near_matches(reading: str, registered: list[str], max_distance: int = 1) -> 
         return []
     found = []
     for plate in registered:
-        distance = Levenshtein.distance(target, _canonical(plate), score_cutoff=max_distance)
+        distance = Levenshtein.distance(
+            target, _canonical(plate), score_cutoff=max_distance
+        )
         if distance <= max_distance:
             found.append(NearMatch(plate=plate, distance=distance))
     return sorted(found, key=lambda m: (m.distance, m.plate))

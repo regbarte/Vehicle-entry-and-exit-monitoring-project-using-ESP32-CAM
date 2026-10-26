@@ -16,7 +16,7 @@ Laptop webcam --------------------------> Dashboard (laptop browser)
 
 - Bun workspaces and Turborepo run the JavaScript tasks. `bun dev` at the root opens the Turborepo TUI, with one pane for the server and one for the dashboard.
 - Python packages form a uv workspace. Each Python package also has a small `package.json` whose scripts call `uv run`, so Turborepo can run them.
-- The firmware has a `package.json` with one script, `deploy`. It uses mpremote to copy files to the board. The firmware has no dev pane.
+- The firmware is an Arduino IDE sketch and is uploaded separately. It has no Turborepo task or dev pane.
 - MongoDB is already installed and running on each development device. Turborepo does not start it.
 - Python tools: ruff (lint and format), pyright (types), pytest.
 - JavaScript tools: Biome (lint and format), Vitest.
@@ -25,15 +25,17 @@ Laptop webcam --------------------------> Dashboard (laptop browser)
 
 ## Firmware
 
-`apps/firmware` runs MicroPython with the lemariva camera build. The `microdot` web library is vendored in `apps/firmware/lib`.
+`apps/firmware/arduino/guardhouse_camera` is an Arduino IDE sketch for the AI-Thinker ESP32-CAM and OV2640 camera.
 
 - `GET /capture` returns a high resolution still. The default is UXGA 1600x1200 at JPEG quality about 10. The plate reader uses it.
-- `GET /preview` returns a small frame, QVGA or VGA. The live view uses it.
+- `GET /preview` returns a VGA 640×480 frame. The live view uses it.
 - `GET /status` returns uptime and Wi-Fi signal.
-- The flash LED stays off.
+- Before a scan, the server measures preview brightness. For a dark image it
+  turns on the ESP32-CAM LED at reduced power, waits for exposure, captures the
+  frame, and turns the LED off again to limit heat and plate glare.
 - The camera is mounted at a fixed spot where cars slow down or stop, aimed so each plate appears at about the same size and angle. Training photos come from the same spot.
 - The camera answers at the hostname `guardcam.local` (mDNS). Each subdivision stores its camera's address, which the provider sets.
-- Wi-Fi credentials live in `apps/firmware/secrets.py`. Git ignores that file.
+- Wi-Fi credentials live in `apps/firmware/arduino/guardhouse_camera/wifi_secrets.h`. Git ignores that file.
 
 ## Server
 

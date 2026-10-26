@@ -6,6 +6,7 @@ dist/
 
 # Python
 .venv/
+.uv-cache/
 __pycache__/
 *.pyc
 .pytest_cache/
@@ -18,7 +19,7 @@ apps/server/openapi.json
 .env.*
 !.env.example
 apps/server/data/
-apps/firmware/secrets.py
+apps/firmware/arduino/guardhouse_camera/wifi_secrets.h
 
 # Trained model weights and training data
 packages/plate-reader/training/datasets/

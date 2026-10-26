@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useEntry, useReturnId } from "../api/queries";
 import { useWorkspace } from "../components/Shell";
@@ -84,16 +84,69 @@ export function EntryDetail() {
 }
 
 function Photo({ src, label }: { src: string | null; label: string }) {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
+
   return (
-    <figure className="flex flex-col gap-1.5">
-      {src ? (
-        <img src={src} alt={label} className="aspect-4/3 w-full rounded-md bg-ink object-cover" />
-      ) : (
-        <div className="flex aspect-4/3 items-center justify-center rounded-md border border-dashed border-line text-sm text-ink-soft">
-          No photo
+    <>
+      <figure className="flex flex-col gap-1.5">
+        {src ? (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="group relative overflow-hidden rounded-md bg-ink text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+            aria-label={`View ${label} full size`}
+          >
+            <img src={src} alt={label} className="aspect-4/3 w-full object-cover" />
+            <span className="absolute inset-x-0 bottom-0 bg-ink/85 px-3 py-2 text-center text-sm font-medium text-paper transition-colors group-hover:bg-teal group-focus-visible:bg-teal">
+              Click to view photo
+            </span>
+          </button>
+        ) : (
+          <div className="flex aspect-4/3 items-center justify-center rounded-md border border-dashed border-line text-sm text-ink-soft">
+            No photo
+          </div>
+        )}
+        <figcaption className="text-xs text-ink-soft">{label}</figcaption>
+      </figure>
+
+      {open && src && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${label} full-size photo`}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/95 p-4 sm:p-8"
+          onClick={() => setOpen(false)}
+        >
+          <div className="flex h-full w-full flex-col gap-3">
+            <div className="flex items-center justify-between text-paper">
+              <p className="text-lg font-semibold">{label}</p>
+              <button
+                type="button"
+                autoFocus
+                onClick={() => setOpen(false)}
+                className="rounded-md border border-paper/40 px-4 py-2 font-medium hover:bg-paper hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
+              >
+                Close
+              </button>
+            </div>
+            <img
+              src={src}
+              alt={`${label} full size`}
+              className="min-h-0 flex-1 self-center rounded-md object-contain"
+              onClick={(event) => event.stopPropagation()}
+            />
+          </div>
         </div>
       )}
-      <figcaption className="text-xs text-ink-soft">{label}</figcaption>
-    </figure>
+    </>
   );
 }

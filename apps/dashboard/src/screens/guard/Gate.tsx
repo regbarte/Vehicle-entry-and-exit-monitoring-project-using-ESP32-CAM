@@ -37,7 +37,7 @@ export function Gate() {
           disabled={readOnly || scan.isPending}
           onClick={() => scan.mutate()}
         >
-          {scan.isPending ? "Scanning…" : "Scan"}
+          {scan.isPending ? "Scanning…" : "Manual scan"}
         </Button>
         <ErrorNote error={scan.error} />
         <WaitingList detections={next} />
@@ -78,7 +78,7 @@ function NoCar({ loading }: { loading: boolean }) {
       <p className="text-lg font-medium">{loading ? "Loading…" : "No car waiting"}</p>
       {!loading && (
         <p className="mt-1 max-w-xs text-sm text-ink-soft">
-          When a car stops at the gate, press Scan to read its plate.
+          Continuous mode is watching for the next vehicle. Manual scan is available if it misses.
         </p>
       )}
     </div>
@@ -145,8 +145,8 @@ function ConfirmPlate({
       <div className="flex flex-col gap-2">
         <label htmlFor="plate" className="text-sm font-medium">
           {detection.plateReading
-            ? "Plate reading. Check it against the car, and correct it if needed."
-            : "No plate found in the photo. Type the plate."}
+            ? "Detected plate. Confirm it, or correct the text before checking the registry."
+            : "The plate could not be read. Enter it manually before checking the registry."}
         </label>
         <input
           id="plate"
@@ -193,7 +193,7 @@ function ConfirmPlate({
           className="flex-1"
           disabled={readOnly || confirm.isPending || !plate.trim()}
         >
-          {confirm.isPending ? "Checking…" : "Confirm plate"}
+          {confirm.isPending ? "Checking…" : "Confirm and check registry"}
         </Button>
         <Button
           variant="quiet"

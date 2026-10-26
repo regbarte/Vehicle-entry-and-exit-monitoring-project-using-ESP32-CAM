@@ -1,8 +1,23 @@
-"""Plate text helpers shared by the server.
-
-Finding and reading the plate in a photo (OpenCV and Tesseract) is not written yet.
-"""
-
 from plate_reader.plates import NearMatch, near_matches, normalize
+from plate_reader.reader import (
+    ContourPlateDetector,
+    PlateBox,
+    PlateDetector,
+    PlateReading,
+    clean_plate,
+    image_brightness,
+    read_plate,
+)
 
-__all__ = ["NearMatch", "near_matches", "normalize"]
+__all__ = [
+    "ContourPlateDetector",
+    "NearMatch",
+    "PlateBox",
+    "PlateDetector",
+    "PlateReading",
+    "clean_plate",
+    "image_brightness",
+    "near_matches",
+    "normalize",
+    "read_plate",
+]

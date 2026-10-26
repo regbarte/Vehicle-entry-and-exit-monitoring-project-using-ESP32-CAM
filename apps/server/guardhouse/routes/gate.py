@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.sse import EventSourceResponse, ServerSentEvent
-from plate_reader import near_matches, normalize
+from plate_reader import near_matches, normalize, read_plate
 
 from guardhouse.camera import mock_read_plate
 from guardhouse.db import Database, Doc, to_entry, to_house
@@ -68,10 +68,8 @@ async def scan(
 ) -> Detection:
     """Take one photo and read its plate. The detection joins the waiting list."""
     sid = str(subdivision["_id"])
-    camera = gates.camera(sid)
     try:
-        async with asyncio.timeout(5):
-            frame = await camera.capture()
+        frame = await gates.capture_frame(sid)
     except TimeoutError:
         raise HTTPException(504, "The gate camera did not answer") from None
 
@@ -81,7 +79,11 @@ async def scan(
     target.parent.mkdir(parents=True, exist_ok=True)
     await run_in_threadpool(target.write_bytes, frame)
 
-    reading = await run_in_threadpool(mock_read_plate, frame)
+    if settings.mock_camera:
+        reading = await run_in_threadpool(mock_read_plate, frame)
+    else:
+        plate = await run_in_threadpool(read_plate, frame)
+        reading = plate.text if plate else None
     detection = Detection(
         id=detection_id,
         subdivision_id=sid,
@@ -160,6 +162,12 @@ async def dismiss(
     detection = gate.waiting.pop(detection_id, None)
     if detection is None:
         raise HTTPException(404, "That detection is no longer waiting")
+    # Dismiss means the guard wants this camera view read again. Continuous mode
+    # normally suppresses a plate while it remains visible, so release this
+    # reading from that window and let the next camera pass create a fresh
+    # detection with a new frame and plate reading.
+    if plate := normalize(detection.plate_reading or ""):
+        gate.recent_plates.pop(plate, None)
     gate.frames.pop(detection_id, None)
     hub.publish(sid, DetectionEvent(type="detection", action="removed", detection=detection))
     return Response(status_code=204)
@@ -172,7 +180,10 @@ async def dismiss(
 )
 async def camera_preview(subdivision: SubdivisionDep, gates: GatesDep) -> Response:
     """The server proxies the camera's /preview, so the browser never talks to the camera."""
-    frame = await gates.camera(str(subdivision["_id"])).preview()
+    sid = str(subdivision["_id"])
+    camera = await gates.camera(sid)
+    async with gates.get(sid).camera_lock:
+        frame = await camera.preview()
     return Response(frame, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
 
 

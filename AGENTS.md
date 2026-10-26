@@ -14,7 +14,7 @@ A guardhouse prototype that serves many subdivisions. An ESP32-CAM photographs a
 apps/
   dashboard/       Vite + React, the guard, HOA officer and provider screens
   server/          FastAPI, MongoDB access
-  firmware/        MicroPython for the ESP32-CAM
+  firmware/        Arduino IDE sketch for the ESP32-CAM
 packages/
   plate-reader/    Python: plate model, Tesseract, plate normalization, near matches
   api-types/       TypeScript types generated from the server's OpenAPI schema
@@ -23,7 +23,7 @@ docs/
   architecture.md
 ```
 
-JavaScript packages use Bun workspaces, and Turborepo runs tasks across all apps. Python packages use a uv workspace (root `pyproject.toml`); each also has a small `package.json` whose scripts call `uv run`, so Turborepo can run them. The firmware's `package.json` only has a `deploy` script.
+JavaScript packages use Bun workspaces, and Turborepo runs tasks across the dashboard and server packages. Python packages use a uv workspace (root `pyproject.toml`); each also has a small `package.json` whose scripts call `uv run`, so Turborepo can run them. The firmware is uploaded separately through Arduino IDE.
 
 ## Rules
 
@@ -37,7 +37,7 @@ JavaScript packages use Bun workspaces, and Turborepo runs tasks across all apps
 - The real product deletes ID photos 30 days after the visitor's exit. The prototype has no sweeper; the team deletes old photos by hand. Don't add automatic deletion without asking.
 - Everything runs on the guardhouse laptop. Don't add cloud services.
 - Use fictional names, plates and IDs in tests and screenshots.
-- Don't commit secrets. Wi-Fi credentials go in `apps/firmware/secrets.py` and server settings in `.env`; git ignores both.
+- Don't commit secrets. Wi-Fi credentials go in `apps/firmware/arduino/guardhouse_camera/wifi_secrets.h` and server settings in `.env`; git ignores both.
 - The server runs one worker process. The waiting lists and the event hub live in memory.
 - The role and subdivision are stored in the browser only. They are not security; don't treat them as access control.
 - Business models, billing and real accounts are out of scope for now.
@@ -50,7 +50,7 @@ JavaScript packages use Bun workspaces, and Turborepo runs tasks across all apps
 - `bun run gen:types`: regenerate the TypeScript types from the server's OpenAPI schema
 - `bun run test`: run the tests in every app and package
 - `bun run lint`: run the linters in every app and package
-- `bun run --filter @guardhouse/firmware deploy`: copy the firmware to the ESP32-CAM
+- Upload `apps/firmware/arduino/guardhouse_camera/guardhouse_camera.ino` with Arduino IDE
 
 The apps are not scaffolded yet, so these commands start working as each app is added.
 

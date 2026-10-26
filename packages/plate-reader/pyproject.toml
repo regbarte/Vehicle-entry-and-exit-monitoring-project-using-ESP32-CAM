@@ -4,6 +4,9 @@ version = "0.0.0"
 description = "Finds the plate in a photo with a trained model, reads it with Tesseract, and normalizes the text."
 requires-python = ">=3.12"
 dependencies = [
+    "numpy>=2.4.0",
+    "opencv-python-headless>=4.13.0.90",
+    "pytesseract>=0.3.13",
     "rapidfuzz>=3.14.6",
 ]
 
