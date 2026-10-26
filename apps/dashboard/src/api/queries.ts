@@ -245,6 +245,19 @@ export function usePurposeStats(sid: string) {
   });
 }
 
+export function useHouseStats(sid: string, days: StatsDays) {
+  return useQuery({
+    queryKey: keys.statsHouses(sid, days),
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/subdivisions/{sid}/stats/houses", {
+          params: { path: { sid }, query: { days } },
+        }),
+      ),
+    placeholderData: (previous) => previous,
+  });
+}
+
 // Registry
 
 export function useHouses(sid: string, q: string) {

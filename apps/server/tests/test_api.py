@@ -249,3 +249,55 @@ async def test_mock_camera_plate_reaches_the_reader():
     for _ in range(10):
         reading = mock_read_plate(await MockCamera(plates).capture())
         assert reading is None or len(reading) == 8
+
+
+def save_residence_visitor(client: TestClient, sid: str, monkeypatch, plate: str, house_id: str):
+    detection = confirm_plate(client, sid, monkeypatch, plate)
+    response = client.post(
+        f"/api/subdivisions/{sid}/entries/visitor",
+        data={
+            "detectionId": detection["id"],
+            "plate": plate,
+            "purpose": "guest",
+            "destination": json.dumps({"kind": "residence", "houseId": house_id}),
+        },
+    )
+    assert response.status_code == 201, response.text
+
+
+def test_house_stats(client, sid, monkeypatch):
+    first = add_house(client, sid)
+    second = add_house(client, sid, lot="5", plate="ABC1111", ownerName="Ana Reyes")
+    add_house(client, sid, lot="6", plate="DEF2222", ownerName="Quiet Owner")
+    confirm_plate(client, sid, monkeypatch, "NBC1234")
+    confirm_plate(client, sid, monkeypatch, "NBC1234")
+    save_residence_visitor(client, sid, monkeypatch, "XYZ9876", second["id"])
+    save_visitor(client, sid, monkeypatch, "QRS5555", "delivery")  # names block 7
+
+    stats = client.get(f"/api/subdivisions/{sid}/stats/houses").json()
+    assert stats["days"] == 7
+    assert sorted(stats["houses"], key=lambda h: h["houseId"]) == sorted(
+        [
+            {"houseId": first["id"], "registered": 2, "visitors": 0},
+            {"houseId": second["id"], "registered": 0, "visitors": 1},
+        ],
+        key=lambda h: h["houseId"],
+    )
+    assert stats["blocks"] == [{"block": "7", "visitors": 1}]
+    assert (
+        client.get(f"/api/subdivisions/{sid}/stats/houses", params={"days": 30}).status_code == 200
+    )
+    assert (
+        client.get(f"/api/subdivisions/{sid}/stats/houses", params={"days": 3}).status_code == 422
+    )
+
+
+def test_house_stats_are_scoped_to_their_subdivision(client, sid, monkeypatch):
+    add_house(client, sid)
+    confirm_plate(client, sid, monkeypatch, "NBC1234")
+    other = client.post(
+        "/api/subdivisions", json={"name": "Other", "address": "", "cameraUrl": "http://x.local"}
+    ).json()["id"]
+    stats = client.get(f"/api/subdivisions/{other}/stats/houses").json()
+    assert stats["houses"] == []
+    assert stats["blocks"] == []

@@ -30,6 +30,14 @@ _Avoid_: Developer (in real estate, the company that built the subdivision), pla
 A home in a subdivision, identified by its block and lot.
 _Avoid_: Household, unit, property
 
+**Block**:
+A group of lots in a subdivision, named by number. A visitor's destination can be a block. The Grid screen draws each block as a cluster of houses.
+_Avoid_: Street, phase, section
+
+**Grid**:
+The HOA officer's picture of the subdivision: every house as a bar or square, sized by its entries.
+_Avoid_: Map, heatmap
+
 **Owner**:
 The registered owner of a house, or the representative the owner named.
 _Avoid_: Homeowner, resident, member

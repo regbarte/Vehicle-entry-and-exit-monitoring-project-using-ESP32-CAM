@@ -15,6 +15,7 @@ export const keys = {
   statsToday: (sid: string) => ["stats", sid, "today"] as const,
   statsHourly: (sid: string, days: StatsDays) => ["stats", sid, "hourly", days] as const,
   statsPurposes: (sid: string) => ["stats", sid, "purposes"] as const,
+  statsHouses: (sid: string, days: StatsDays) => ["stats", sid, "houses", days] as const,
 };
 
 export type StatsDays = 7 | 30;

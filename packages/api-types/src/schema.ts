@@ -366,10 +366,37 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/subdivisions/{sid}/stats/houses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Houses */
+        get: operations["houses_api_subdivisions__sid__stats_houses_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BlockCount */
+        BlockCount: {
+            /** Block */
+            block: string;
+            /**
+             * Visitors
+             * @description Visitors who named this block, not a house.
+             */
+            visitors: number;
+        };
         /** BlockDestination */
         BlockDestination: {
             /**
@@ -587,6 +614,21 @@ export interface components {
              */
             residenceLabel: string;
         };
+        /** HouseCount */
+        HouseCount: {
+            /** Houseid */
+            houseId: string;
+            /**
+             * Registered
+             * @description Entries by the house's registered vehicle.
+             */
+            registered: number;
+            /**
+             * Visitors
+             * @description Visitors who named this house as their residence.
+             */
+            visitors: number;
+        };
         /** HouseCreate */
         HouseCreate: {
             /** Block */
@@ -610,6 +652,19 @@ export interface components {
              * @description The registered vehicle's plate, if any.
              */
             plate?: string | null;
+        };
+        /**
+         * HouseStats
+         * @description Entries per house over the last `days` days, today included. Houses with no
+         *     entries in the window are left out.
+         */
+        HouseStats: {
+            /** Days */
+            days: number;
+            /** Houses */
+            houses: components["schemas"]["HouseCount"][];
+            /** Blocks */
+            blocks: components["schemas"]["BlockCount"][];
         };
         /**
          * HouseUpdate
@@ -1544,6 +1599,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PurposeStats"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    houses_api_subdivisions__sid__stats_houses_get: {
+        parameters: {
+            query?: {
+                /** @description 7 or 30: today plus the days before it. */
+                days?: number;
+            };
+            header?: never;
+            path: {
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HouseStats"];
                 };
             };
             /** @description Validation Error */

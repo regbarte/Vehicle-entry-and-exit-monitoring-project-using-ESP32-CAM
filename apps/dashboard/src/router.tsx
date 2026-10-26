@@ -5,6 +5,7 @@ import { EntryLog } from "./screens/EntryLog";
 import { Gate } from "./screens/guard/Gate";
 import { RegistryLookup } from "./screens/guard/RegistryLookup";
 import { Today } from "./screens/guard/Today";
+import { Grid } from "./screens/hoa/Grid";
 import { Houses } from "./screens/hoa/Houses";
 import { Overview } from "./screens/hoa/Overview";
 import { EditSubdivision, NewSubdivision, Subdivisions } from "./screens/provider/Subdivisions";
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="overview" replace /> },
       { path: "overview", element: <Overview /> },
+      { path: "grid", element: <Grid /> },
       { path: "houses", element: <Houses /> },
       ...shared,
     ],

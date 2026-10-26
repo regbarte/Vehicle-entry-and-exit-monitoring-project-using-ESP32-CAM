@@ -247,3 +247,23 @@ class PurposeStats(ApiModel):
 
     days: int
     purposes: list[PurposeCount]
+
+
+class HouseCount(ApiModel):
+    house_id: str
+    registered: int = Field(description="Entries by the house's registered vehicle.")
+    visitors: int = Field(description="Visitors who named this house as their residence.")
+
+
+class BlockCount(ApiModel):
+    block: str
+    visitors: int = Field(description="Visitors who named this block, not a house.")
+
+
+class HouseStats(ApiModel):
+    """Entries per house over the last `days` days, today included. Houses with no
+    entries in the window are left out."""
+
+    days: int
+    houses: list[HouseCount]
+    blocks: list[BlockCount]

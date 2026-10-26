@@ -1,5 +1,6 @@
 """Counts for the guard's Today screen and the HOA officer's Overview. Totals only."""
 
+from collections import Counter
 from collections.abc import Iterable
 from typing import Annotated, get_args
 
@@ -9,8 +10,11 @@ from guardhouse.clock import local_hour, local_today, start_of_day, window_start
 from guardhouse.db import Doc
 from guardhouse.deps import DbDep, GatesDep, SubdivisionDep
 from guardhouse.models import (
+    BlockCount,
     HourCount,
     HourlyStats,
+    HouseCount,
+    HouseStats,
     Purpose,
     PurposeCount,
     PurposeStats,
@@ -84,4 +88,33 @@ async def purposes(subdivision: SubdivisionDep, db: DbDep, days: Days = 7) -> Pu
     return PurposeStats(
         days=days,
         purposes=[PurposeCount.model_validate({"purpose": p, "count": n}) for p, n in ranked],
+    )
+
+
+@router.get("/houses")
+async def houses(subdivision: SubdivisionDep, db: DbDep, days: Days = 7) -> HouseStats:
+    days = _window(days)
+    registered: Counter[str] = Counter()
+    visitors: Counter[str] = Counter()
+    blocks: Counter[str] = Counter()
+    async for doc in db.entries.find(
+        {"subdivisionId": str(subdivision["_id"]), "at": {"$gte": window_start(days)}},
+        {"verdict": 1, "houseId": 1, "visitor.destination": 1},
+    ):
+        if doc["verdict"] == "registered":
+            if doc.get("houseId"):
+                registered[doc["houseId"]] += 1
+            continue
+        destination = doc["visitor"]["destination"]
+        if destination["kind"] == "residence":
+            visitors[destination["houseId"]] += 1
+        else:
+            blocks[destination["block"]] += 1
+    return HouseStats(
+        days=days,
+        houses=[
+            HouseCount(house_id=id, registered=registered[id], visitors=visitors[id])
+            for id in sorted(registered.keys() | visitors.keys())
+        ],
+        blocks=[BlockCount(block=block, visitors=n) for block, n in sorted(blocks.items())],
     )

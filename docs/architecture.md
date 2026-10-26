@@ -118,6 +118,7 @@ GET    .../entries/inside                (guard only)
 GET    .../stats/today                   (guard Today: counts, entries per hour today)
 GET    .../stats/hourly?days=7|30        (HOA Overview: entries by hour of day, by verdict)
 GET    .../stats/purposes?days=7|30      (HOA Overview: visitors by purpose)
+GET    .../stats/houses?days=7|30        (HOA Grid: entries per house, visitors per block)
 GET    .../houses?q=
 POST   .../houses                        (HOA officer)
 PATCH  .../houses/{id}                   (HOA officer)
@@ -127,7 +128,7 @@ GET    .../events                        (SSE)
 GET    /files/...                        (photos)
 ```
 
-A stats window of 7 or 30 days is today plus the days before it, from local midnight. `dailyEntries` is 7 counts, oldest first, today last.
+A stats window of 7 or 30 days is today plus the days before it, from local midnight. `stats/houses` returns `{days, houses: [{houseId, registered, visitors}], blocks: [{block, visitors}]}`. `registered` counts entries by the house's registered vehicle, `visitors` counts visitors who named that residence, and `blocks` counts visitors who named a block. Houses with no entries in the window are left out. `dailyEntries` is 7 counts, oldest first, today last.
 
 The provider list returns counts and status only, never houses, entries or photos. The API has no auth in the prototype, so this is a convention the dashboard follows, not a control.
 
@@ -143,7 +144,10 @@ TypeScript types come from the OpenAPI schema. The Turborepo task `gen:types` du
 - One hook, `useEventStream`, opens the EventSource once and writes events into the TanStack Query cache. Screens use plain `useQuery`. On reconnect, the hook refetches.
 - The root page offers three roles: guard, HOA officer and provider. A guard or HOA officer then picks an active subdivision; the provider goes straight to the subdivisions list. The browser stores the role and subdivision in localStorage only. The API has no auth, so this is not a security control.
 - Guard screens: gate (the landing page), Today, visitor form, entry log, entry detail, registry lookup. Today shows stat tiles (entries today, visitors inside, waiting list), an arc of today's entries split registered vs visitor, entries per hour today, a short Inside now list with Return ID, and the latest five entries.
-- HOA officer screens: Overview (the landing page), houses (add, edit, remove), and today's entry log, read-only. Overview shows registry tiles, recently updated houses, entries by hour of day with a 7-day or 30-day switch, and visitors by purpose over the last 7 days. There is no heatmap. The HOA officer has no Inside now list, but the entry log and entry detail show each visitor's exit time, or "Not yet exited". They can't return IDs.
+- HOA officer screens: Overview (the landing page), houses (add, edit, remove), and today's entry log, read-only. Overview shows registry tiles, recently updated houses, entries by hour of day with a 7-day or 30-day switch, and visitors by purpose over the last 7 days. The Grid screen, next to Overview, draws the subdivision (see below). The HOA officer has no Inside now list, but the entry log and entry detail show each visitor's exit time, or "Not yet exited". They can't return IDs.
+- HOA officer Grid screen: the subdivision as a 3D grid, one bar per house, built from `stats/houses`. A bar's height is the house's entries in the 7-day or 30-day window, Dark Teal for registered with Sandy Clay visitors stacked on top. Clicking a house shows its details and turns every other house translucent; clicking it again, or "Show all houses", clears that. A Plan view shows the same houses as a flat grid with the entry count in each square, and it is the view for keyboards, screen readers and laptops without WebGL. A side card lists visitors who named a block instead of a house.
+- The registry stores no coordinates. `src/lib/grid.ts` places the houses from block and lot: one square cluster of lots per block, blocks in rows about twice as wide as deep, one empty row or column of street between blocks. Blocks and lots sort by number, so block 2 comes before block 10.
+- The 3D view uses three.js through `@react-three/fiber` and `@react-three/drei`. The Grid screen loads it lazily so the other screens never download it. The scene redraws on demand. Labels are DOM elements that follow their 3D positions, because drei's `Html` logs a React 19 unmount error.
 - Provider screens: subdivisions as cards (status, camera, house count, 7-day entries sparkline), add and edit a subdivision, deactivate or reactivate it.
 - Charts use Dark Teal for registered and Sandy Clay for visitors, always with a legend or direct labels.
 - An inactive subdivision shows a banner on every guard and HOA officer screen, and hides the actions that save.
