@@ -70,7 +70,7 @@ export function PlanGrid({ layout, houses, descriptions, selectedId, onSelect }:
             aria-label={descriptions.get(house.id)}
             aria-pressed={picked}
             onClick={() => onSelect(house.id)}
-            className={`aspect-square rounded-md font-mono text-sm font-semibold tabular-nums transition-opacity motion-reduce:transition-none ${selectedId && !picked ? "opacity-40" : ""} ${look}`}
+            className={`aspect-square rounded-md font-mono text-sm font-semibold tabular-nums transition-[opacity,background-color,color] duration-300 motion-reduce:transition-none ${selectedId && !picked ? "opacity-40" : ""} ${look}`}
             style={{ gridColumn: house.col + 1, gridRow: house.row + 2 }}
           >
             {total > 0 ? total : ""}

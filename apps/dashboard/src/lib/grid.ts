@@ -92,3 +92,24 @@ export function barHeights(
     visitors: height(house.visitors),
   });
 }
+
+export const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
+
+/** out[i] = from[i] + (to[i] - from[i]) * t, written into `out` so a frame allocates nothing. */
+export function blend(from: Float32Array, to: Float32Array, t: number, out: Float32Array) {
+  for (let i = 0; i < out.length; i++) out[i] = from[i] + (to[i] - from[i]) * t;
+  return out;
+}
+
+/** The bar heights as flat arrays in `houses` order, for the 3D view to animate between. */
+export function heightArrays(houses: Pick<GridHouse, "registered" | "visitors">[], maxHeight = 4) {
+  const height = barHeights(houses, maxHeight);
+  const registered = new Float32Array(houses.length);
+  const visitors = new Float32Array(houses.length);
+  houses.forEach((house, i) => {
+    const h = height(house);
+    registered[i] = h.registered;
+    visitors[i] = h.visitors;
+  });
+  return { registered, visitors };
+}

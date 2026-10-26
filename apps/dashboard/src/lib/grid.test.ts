@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { barHeights, layoutHouses } from "./grid";
+import { barHeights, blend, easeOutCubic, heightArrays, layoutHouses } from "./grid";
 
 const lots = (block: string, count: number) =>
   Array.from({ length: count }, (_, i) => ({ id: `${block}-${i + 1}`, block, lot: String(i + 1) }));
@@ -88,5 +88,39 @@ describe("barHeights", () => {
       { registered: 1, visitors: 0 },
     ]);
     expect(lopsided({ registered: 1, visitors: 0 }).registered).toBe(0.15);
+  });
+});
+
+describe("blend", () => {
+  it("moves each value from one set of heights toward the other", () => {
+    const out = new Float32Array(2);
+    const from = new Float32Array([0, 4]);
+    const to = new Float32Array([2, 0]);
+    expect([...blend(from, to, 0, out)]).toEqual([0, 4]);
+    expect([...blend(from, to, 0.5, out)]).toEqual([1, 2]);
+    expect([...blend(from, to, 1, out)]).toEqual([2, 0]);
+  });
+});
+
+describe("easeOutCubic", () => {
+  it("runs from 0 to 1 and is quickest at the start", () => {
+    expect(easeOutCubic(0)).toBe(0);
+    expect(easeOutCubic(1)).toBe(1);
+    expect(easeOutCubic(0.2)).toBeGreaterThan(0.2);
+    expect(easeOutCubic(0.9) - easeOutCubic(0.8)).toBeLessThan(easeOutCubic(0.1) - easeOutCubic(0));
+  });
+});
+
+describe("heightArrays", () => {
+  it("lists each house's heights in order", () => {
+    const { registered, visitors } = heightArrays(
+      [
+        { registered: 8, visitors: 2 },
+        { registered: 2, visitors: 0 },
+      ],
+      4,
+    );
+    expect([...registered].map((n) => +n.toFixed(2))).toEqual([3.2, 0.8]);
+    expect([...visitors].map((n) => +n.toFixed(2))).toEqual([0.8, 0]);
   });
 });

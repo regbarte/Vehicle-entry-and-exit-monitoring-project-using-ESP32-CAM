@@ -1,9 +1,10 @@
-import { lazy, Suspense, useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
 import type { StatsDays } from "../../api/keys";
 import { useHouseStats, useHouses } from "../../api/queries";
 import { PLAN_TINTS, PlanGrid } from "../../components/PlanGrid";
 import { useWorkspace } from "../../components/Shell";
+import type { GridCamera } from "../../components/SubdivisionGrid3D";
 import {
   Button,
   Card,
@@ -51,8 +52,17 @@ export function Grid() {
   // The house the officer picked. Until then, the card shows the busiest house.
   const [picked, setPicked] = useState<string | null>(null);
 
+  const camera = useRef<GridCamera>(null);
+
   const housesQuery = useHouses(sid, "");
-  const stats = useHouseStats(sid, days);
+  // Both windows load up front, so switching between them is instant.
+  const week = useHouseStats(sid, 7);
+  const month = useHouseStats(sid, 30);
+  const current = days === 7 ? week : month;
+  // Until the other window arrives, keep showing the last numbers instead of an empty grid.
+  const lastData = useRef(current.data);
+  if (current.data) lastData.current = current.data;
+  const stats = { data: current.data ?? lastData.current, error: week.error ?? month.error };
   const registry = useMemo(() => housesQuery.data ?? [], [housesQuery.data]);
 
   const layout = useMemo(
@@ -116,7 +126,14 @@ export function Grid() {
   }, [layout, stats.data]);
   const mostBlockVisitors = Math.max(1, ...blockVisitors.map((b) => b.visitors));
 
-  const pick = (id: string) => setPicked((now) => (now === id ? null : id));
+  // Picking a house flies the camera to it; clearing the pick flies back to the whole site.
+  const select = (id: string | null) => {
+    setPicked(id);
+    const at = id ? grid.find((g) => g.id === id) : undefined;
+    if (at) camera.current?.flyTo(at.col, at.row);
+    else camera.current?.reset();
+  };
+  const pick = (id: string) => select(pickedId === id ? null : id);
   const label = (g: GridHouse | undefined) => (g ? (labels.get(g.id) ?? "") : "None");
 
   return (
@@ -211,10 +228,9 @@ export function Grid() {
               </ul>
 
               {view === "3d" ? (
-                <div
-                  role="img"
-                  aria-label={`${registry.length} houses in ${layout.blocks.length} blocks, drawn as bars. Use the plan view for the numbers.`}
-                  className="h-[28rem] w-full min-w-0 touch-none md:h-[34rem]"
+                <section
+                  aria-label={`${registry.length} houses in ${layout.blocks.length} blocks, drawn as bars. The plan view has the numbers.`}
+                  className="relative h-[28rem] w-full min-w-0 touch-none md:h-[34rem]"
                 >
                   <Suspense fallback={<Loading />}>
                     <SubdivisionGrid3D
@@ -223,9 +239,41 @@ export function Grid() {
                       labels={labels}
                       selectedId={pickedId}
                       onSelect={pick}
+                      cameraRef={camera}
                     />
                   </Suspense>
-                </div>
+                  <div className="absolute right-2 bottom-2 flex flex-col gap-1">
+                    <Button
+                      aria-label="Zoom in"
+                      className="size-10 px-0 text-lg"
+                      onClick={() => camera.current?.zoom(0.8)}
+                    >
+                      +
+                    </Button>
+                    <Button
+                      aria-label="Zoom out"
+                      className="size-10 px-0 text-lg"
+                      onClick={() => camera.current?.zoom(1.25)}
+                    >
+                      −
+                    </Button>
+                    <Button
+                      aria-label="Rotate left"
+                      className="size-10 px-0 text-lg"
+                      onClick={() => camera.current?.turn(-Math.PI / 8)}
+                    >
+                      ↺
+                    </Button>
+                    <Button
+                      aria-label="Rotate right"
+                      className="size-10 px-0 text-lg"
+                      onClick={() => camera.current?.turn(Math.PI / 8)}
+                    >
+                      ↻
+                    </Button>
+                    <Button onClick={() => camera.current?.reset()}>Reset view</Button>
+                  </div>
+                </section>
               ) : (
                 <PlanGrid
                   layout={layout}
@@ -237,7 +285,7 @@ export function Grid() {
               )}
               <p className="text-sm text-ink-soft">
                 {view === "3d"
-                  ? "Drag to rotate and scroll to zoom. Click a house to see its details and fade the rest; click it again to show all."
+                  ? "Drag to rotate, right-drag or use two fingers to move, scroll to zoom. Arrow keys move the view. Click a house to fly to it and fade the rest; click it again to show all."
                   : "The number in each square is that house's entries. Darker squares have more."}
               </p>
 
@@ -281,17 +329,14 @@ export function Grid() {
                 title="Selected house"
                 actions={
                   pickedId && (
-                    <Button size="md" onClick={() => setPicked(null)}>
+                    <Button size="md" onClick={() => select(null)}>
                       Show all houses
                     </Button>
                   )
                 }
               >
                 <Field label="Jump to a house">
-                  <Select
-                    value={pickedId ?? ""}
-                    onChange={(e) => setPicked(e.target.value || null)}
-                  >
+                  <Select value={pickedId ?? ""} onChange={(e) => select(e.target.value || null)}>
                     <option value="">Busiest house</option>
                     {registry.map((h) => (
                       <option key={h.id} value={h.id}>
