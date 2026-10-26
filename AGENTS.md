@@ -46,7 +46,7 @@ JavaScript packages use Bun workspaces, and Turborepo runs tasks across the dash
 
 - `bun install`: install JavaScript dependencies
 - `uv sync`: install Python dependencies
-- `bun dev`: Turborepo TUI with the server and the dashboard; needs MongoDB already running locally
+- `bun dev`: Turborepo TUI with the server and the dashboard; needs `MONGO_URI` in `apps/server/.env` pointing at MongoDB Atlas
 - `bun run gen:types`: regenerate the TypeScript types from the server's OpenAPI schema
 - `bun run test`: run the tests in every app and package
 - `bun run lint`: run the linters in every app and package
