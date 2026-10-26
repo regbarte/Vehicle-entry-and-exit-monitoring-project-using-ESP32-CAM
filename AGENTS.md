@@ -40,13 +40,13 @@ JavaScript packages use Bun workspaces, and Turborepo runs tasks across the dash
 - Don't commit secrets. Wi-Fi credentials go in `apps/firmware/arduino/guardhouse_camera/wifi_secrets.h` and server settings in `.env`; git ignores both.
 - The server runs one worker process. The waiting lists and the event hub live in memory.
 - The role and subdivision are stored in the browser only. They are not security; don't treat them as access control.
-- Business models, billing and real accounts are out of scope for now.
+- Business models, billing, logins and passwords are out of scope for now. Users are stored without passwords.
 
 ## Commands
 
 - `bun install`: install JavaScript dependencies
 - `uv sync`: install Python dependencies
-- `bun dev`: Turborepo TUI with the server and the dashboard; needs MongoDB already running locally
+- `bun dev`: Turborepo TUI with the server and the dashboard; needs `MONGO_URI` in `apps/server/.env` pointing at MongoDB Atlas
 - `bun run gen:types`: regenerate the TypeScript types from the server's OpenAPI schema
 - `bun run test`: run the tests in every app and package
 - `bun run lint`: run the linters in every app and package

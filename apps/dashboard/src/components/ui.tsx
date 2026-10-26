@@ -119,7 +119,7 @@ export function StatTile({
   note,
 }: {
   label: string;
-  value: number;
+  value: number | string;
   note?: ReactNode;
 }) {
   return (

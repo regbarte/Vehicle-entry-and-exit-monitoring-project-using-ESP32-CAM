@@ -277,3 +277,104 @@ async def test_mock_camera_plate_reaches_the_reader():
     for _ in range(10):
         reading = mock_read_plate(await MockCamera(plates).capture())
         assert reading is None or len(reading) == 8
+
+
+def save_residence_visitor(client: TestClient, sid: str, monkeypatch, plate: str, house_id: str):
+    detection = confirm_plate(client, sid, monkeypatch, plate)
+    response = client.post(
+        f"/api/subdivisions/{sid}/entries/visitor",
+        data={
+            "detectionId": detection["id"],
+            "plate": plate,
+            "purpose": "guest",
+            "destination": json.dumps({"kind": "residence", "houseId": house_id}),
+        },
+    )
+    assert response.status_code == 201, response.text
+
+
+def test_house_stats(client, sid, monkeypatch):
+    first = add_house(client, sid)
+    second = add_house(client, sid, lot="5", plate="ABC1111", ownerName="Ana Reyes")
+    add_house(client, sid, lot="6", plate="DEF2222", ownerName="Quiet Owner")
+    confirm_plate(client, sid, monkeypatch, "NBC1234")
+    confirm_plate(client, sid, monkeypatch, "NBC1234")
+    save_residence_visitor(client, sid, monkeypatch, "XYZ9876", second["id"])
+    save_visitor(client, sid, monkeypatch, "QRS5555", "delivery")  # names block 7
+
+    stats = client.get(f"/api/subdivisions/{sid}/stats/houses").json()
+    assert stats["days"] == 7
+    assert sorted(stats["houses"], key=lambda h: h["houseId"]) == sorted(
+        [
+            {"houseId": first["id"], "registered": 2, "visitors": 0},
+            {"houseId": second["id"], "registered": 0, "visitors": 1},
+        ],
+        key=lambda h: h["houseId"],
+    )
+    assert stats["blocks"] == [{"block": "7", "visitors": 1}]
+    assert (
+        client.get(f"/api/subdivisions/{sid}/stats/houses", params={"days": 30}).status_code == 200
+    )
+    assert (
+        client.get(f"/api/subdivisions/{sid}/stats/houses", params={"days": 3}).status_code == 422
+    )
+
+
+def test_house_stats_are_scoped_to_their_subdivision(client, sid, monkeypatch):
+    add_house(client, sid)
+    confirm_plate(client, sid, monkeypatch, "NBC1234")
+    other = client.post(
+        "/api/subdivisions", json={"name": "Other", "address": "", "cameraUrl": "http://x.local"}
+    ).json()["id"]
+    stats = client.get(f"/api/subdivisions/{other}/stats/houses").json()
+    assert stats["houses"] == []
+    assert stats["blocks"] == []
+
+
+def add_user(client: TestClient, sid: str, **fields) -> dict:
+    body = {"name": "Maria  Santos", "email": "Maria@Example.test", "role": "hoa_officer"} | fields
+    response = client.post(f"/api/subdivisions/{sid}/users", json=body)
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def test_add_and_list_users(client, sid):
+    officer = add_user(client, sid)
+    assert officer["name"] == "Maria Santos"
+    assert officer["email"] == "maria@example.test"
+    add_user(client, sid, name="Pedro Reyes", email="pedro@example.test", role="guard")
+    users = client.get(f"/api/subdivisions/{sid}/users").json()
+    assert [u["role"] for u in users] == ["guard", "hoa_officer"]
+    guards = client.get(f"/api/subdivisions/{sid}/users", params={"role": "guard"}).json()
+    assert [u["name"] for u in guards] == ["Pedro Reyes"]
+
+
+def test_user_email_is_unique_across_subdivisions(client, sid):
+    add_user(client, sid)
+    other = client.post(
+        "/api/subdivisions", json={"name": "Other", "cameraUrl": "http://other.local"}
+    ).json()["id"]
+    response = client.post(
+        f"/api/subdivisions/{other}/users",
+        json={"name": "M S", "email": "maria@example.test", "role": "guard"},
+    )
+    assert response.status_code == 409
+    assert client.get(f"/api/subdivisions/{other}/users").json() == []
+
+
+def test_user_needs_a_known_role_and_email(client, sid):
+    for body in (
+        {"name": "A", "email": "a@example.test", "role": "provider"},
+        {"name": "A", "email": "not-an-email", "role": "guard"},
+    ):
+        assert client.post(f"/api/subdivisions/{sid}/users", json=body).status_code == 422
+
+
+def test_inactive_subdivision_cannot_add_users(client, sid):
+    client.patch(f"/api/subdivisions/{sid}", json={"active": False})
+    response = client.post(
+        f"/api/subdivisions/{sid}/users",
+        json={"name": "A", "email": "a@example.test", "role": "guard"},
+    )
+    assert response.status_code == 409
+    assert client.get(f"/api/subdivisions/{sid}/users").status_code == 200

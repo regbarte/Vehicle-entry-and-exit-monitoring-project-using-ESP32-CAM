@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useEntry, useReturnId } from "../api/queries";
 import { useWorkspace } from "../components/Shell";
@@ -85,9 +85,11 @@ export function EntryDetail() {
 
 function Photo({ src, label }: { src: string | null; label: string }) {
   const [open, setOpen] = useState(false);
+  const closeButton = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
+    closeButton.current?.focus();
     // The viewer covers the page, so Escape should always close it.
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
@@ -125,16 +127,23 @@ function Photo({ src, label }: { src: string | null; label: string }) {
           aria-modal="true"
           aria-label={`${label} full-size photo`}
           className="fixed inset-0 z-50 flex items-center justify-center bg-ink/95 p-4 sm:p-8"
-          onClick={() => setOpen(false)}
         >
-          <div className="flex h-full w-full flex-col gap-3">
+          {/* Clicking anywhere outside the photo closes it. Keyboards use Close or Escape. */}
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden="true"
+            onClick={() => setOpen(false)}
+            className="absolute inset-0 cursor-default"
+          />
+          <div className="pointer-events-none relative flex h-full w-full flex-col gap-3">
             <div className="flex items-center justify-between text-paper">
               <p className="text-lg font-semibold">{label}</p>
               <button
+                ref={closeButton}
                 type="button"
-                autoFocus
                 onClick={() => setOpen(false)}
-                className="rounded-md border border-paper/40 px-4 py-2 font-medium hover:bg-paper hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
+                className="pointer-events-auto rounded-md border border-paper/40 px-4 py-2 font-medium hover:bg-paper hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
               >
                 Close
               </button>
@@ -142,8 +151,7 @@ function Photo({ src, label }: { src: string | null; label: string }) {
             <img
               src={src}
               alt={`${label} full size`}
-              className="min-h-0 flex-1 self-center rounded-md object-contain"
-              onClick={(event) => event.stopPropagation()}
+              className="pointer-events-auto min-h-0 flex-1 self-center rounded-md object-contain"
             />
           </div>
         </div>

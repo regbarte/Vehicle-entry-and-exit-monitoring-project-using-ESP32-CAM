@@ -8,6 +8,7 @@ import {
   useUpdateSubdivision,
 } from "../../api/queries";
 import { Sparkline } from "../../components/charts";
+import { UsersPanel } from "../../components/UsersPanel";
 import { Button, Empty, ErrorNote, Field, Input, Loading, PageHeader } from "../../components/ui";
 import { saveSession } from "../../lib/session";
 
@@ -121,8 +122,11 @@ function SubdivisionCard({ subdivision: s }: { subdivision: SubdivisionSummary }
       />
       {update.error && <ErrorNote error={update.error} />}
       <div className="mt-auto flex items-center gap-2">
-        <Link to={`/provider/${s.id}/edit`} className="mr-auto text-sm text-teal underline">
+        <Link to={`/provider/${s.id}/edit`} className="text-sm text-teal underline">
           Edit
+        </Link>
+        <Link to={`/provider/${s.id}/officers`} className="mr-auto text-sm text-teal underline">
+          HOA officers
         </Link>
         <Button
           variant={s.active ? "danger" : "secondary"}
@@ -171,6 +175,27 @@ export function EditSubdivision({ sid }: { sid: string }) {
           pending={update.isPending}
           error={update.error}
           onSubmit={(body) => update.mutate(body, { onSuccess: () => navigate("/provider") })}
+        />
+      )}
+    </ProviderShell>
+  );
+}
+
+/** The provider gives each subdivision its HOA officer accounts. */
+export function SubdivisionOfficers({ sid }: { sid: string }) {
+  const subdivision = useSubdivision(sid);
+  return (
+    <ProviderShell>
+      {subdivision.isPending ? (
+        <Loading />
+      ) : subdivision.isError ? (
+        <ErrorNote error={subdivision.error} />
+      ) : (
+        <UsersPanel
+          sid={sid}
+          title={`HOA officers · ${subdivision.data.name}`}
+          roles={["hoa_officer"]}
+          readOnly={!subdivision.data.active}
         />
       )}
     </ProviderShell>

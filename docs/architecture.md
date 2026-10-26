@@ -17,7 +17,7 @@ Laptop webcam --------------------------> Dashboard (laptop browser)
 - Bun workspaces and Turborepo run the JavaScript tasks. `bun dev` at the root opens the Turborepo TUI, with one pane for the server and one for the dashboard.
 - Python packages form a uv workspace. Each Python package also has a small `package.json` whose scripts call `uv run`, so Turborepo can run them.
 - The firmware is an Arduino IDE sketch and is uploaded separately. It has no Turborepo task or dev pane.
-- MongoDB is already installed and running on each development device. Turborepo does not start it.
+- MongoDB runs in MongoDB Atlas. Each development device needs its IP in the Atlas Network Access list and `MONGO_URI` in `.env`. Turborepo does not start anything for it.
 - Python tools: ruff (lint and format), pyright (types), pytest.
 - JavaScript tools: Biome (lint and format), Vitest.
 - There is no CI yet.
@@ -71,7 +71,7 @@ Laptop webcam --------------------------> Dashboard (laptop browser)
 
 ## Data
 
-MongoDB holds three collections, `subdivisions`, `houses` and `entries`. Their shape looks like this:
+MongoDB holds four collections, `subdivisions`, `houses`, `entries` and `users`. Their shape looks like this:
 
 ```text
 subdivisions: { name, address, cameraUrl, active, createdAt }
@@ -84,6 +84,8 @@ entries: { subdivisionId, at, plate, plateRaw, verdict: "registered" | "visitor"
                        destination: { kind: "block", block }
                                   | { kind: "residence", houseId, label },
                        idPhoto: path | null, exitAt: time | null } }
+users:   { subdivisionId, name, email (lowercase, unique across subdivisions),
+           role: "guard" | "hoa_officer", createdAt }
 ```
 
 - Every house and entry carries its `subdivisionId`. Queries always filter by it.
@@ -93,6 +95,7 @@ entries: { subdivisionId, at, plate, plateRaw, verdict: "registered" | "visitor"
 - A destination is either a block (for example "Block 19") or a residence picked from the registry. A residence is stored as the house id plus a label, such as "Dela Cruz Residence".
 - Delivery suggests a block. Guest suggests a residence.
 - `exitAt` stays empty until the guard returns the Held ID.
+- A user belongs to one subdivision. The provider adds its HOA officers; an HOA officer adds guards and other HOA officers. Users have no password yet, so the role picker still decides who you are. The email is unique across subdivisions so it can become the login.
 - There is no seed file. How test and demo data get created is not decided yet.
 
 ## API
@@ -120,16 +123,19 @@ GET    .../entries/inside                (guard only)
 GET    .../stats/today                   (guard Today: counts, entries per hour today)
 GET    .../stats/hourly?days=7|30        (HOA Overview: entries by hour of day, by verdict)
 GET    .../stats/purposes?days=7|30      (HOA Overview: visitors by purpose)
+GET    .../stats/houses?days=7|30        (HOA Grid: entries per house, visitors per block)
 GET    .../houses?q=
 POST   .../houses                        (HOA officer)
 PATCH  .../houses/{id}                   (HOA officer)
 DELETE .../houses/{id}                   (HOA officer)
+GET    .../users                         (provider: HOA officers; HOA officer: everyone)
+POST   .../users                         {name, email, role}
 GET    .../camera/preview                (server proxies the camera's /preview)
 GET    .../events                        (SSE)
 GET    /files/...                        (photos)
 ```
 
-A stats window of 7 or 30 days is today plus the days before it, from local midnight. `dailyEntries` is 7 counts, oldest first, today last.
+A stats window of 7 or 30 days is today plus the days before it, from local midnight. `stats/houses` returns `{days, houses: [{houseId, registered, visitors}], blocks: [{block, visitors}]}`. `registered` counts entries by the house's registered vehicle, `visitors` counts visitors who named that residence, and `blocks` counts visitors who named a block. Houses with no entries in the window are left out. `dailyEntries` is 7 counts, oldest first, today last.
 
 The provider list returns counts and status only, never houses, entries or photos. The API has no auth in the prototype, so this is a convention the dashboard follows, not a control.
 
@@ -145,8 +151,11 @@ TypeScript types come from the OpenAPI schema. The Turborepo task `gen:types` du
 - One hook, `useEventStream`, opens the EventSource once and writes events into the TanStack Query cache. Screens use plain `useQuery`. On reconnect, the hook refetches.
 - The root page offers three roles: guard, HOA officer and provider. A guard or HOA officer then picks an active subdivision; the provider goes straight to the subdivisions list. The browser stores the role and subdivision in localStorage only. The API has no auth, so this is not a security control.
 - Guard screens: gate (the landing page), Today, visitor form, entry log, entry detail, registry lookup. Today shows stat tiles (entries today, visitors inside, waiting list), an arc of today's entries split registered vs visitor, entries per hour today, a short Inside now list with Return ID, and the latest five entries.
-- HOA officer screens: Overview (the landing page), houses (add, edit, remove), and today's entry log, read-only. Overview shows registry tiles, recently updated houses, entries by hour of day with a 7-day or 30-day switch, and visitors by purpose over the last 7 days. There is no heatmap. The HOA officer has no Inside now list, but the entry log and entry detail show each visitor's exit time, or "Not yet exited". They can't return IDs.
-- Provider screens: subdivisions as cards (status, camera, house count, 7-day entries sparkline), add and edit a subdivision, deactivate or reactivate it.
+- HOA officer screens: Overview (the landing page), houses (add, edit, remove), users (Add user, for guards and HOA officers), and today's entry log, read-only. Overview shows registry tiles, recently updated houses, entries by hour of day with a 7-day or 30-day switch, and visitors by purpose over the last 7 days. The Grid screen, next to Overview, draws the subdivision (see below). The HOA officer has no Inside now list, but the entry log and entry detail show each visitor's exit time, or "Not yet exited". They can't return IDs.
+- HOA officer Grid screen: the subdivision as a 3D grid, one bar per house, built from `stats/houses`. A bar's height is the house's entries in the 7-day or 30-day window, Dark Teal for registered with Sandy Clay visitors stacked on top. Clicking a house shows its details, turns every other house translucent and flies the camera to it; clicking it again, or "Show all houses", clears that and flies back to the whole site. Switching between 7 and 30 days eases each bar to its new height over about 0.6 seconds. Both windows load up front, so the switch never waits on the server. Each window is scaled so its busiest house is the tallest bar. A Plan view shows the same houses as a flat grid with the entry count in each square, and it is the view for keyboards, screen readers and laptops without WebGL. A side card lists visitors who named a block instead of a house.
+- The registry stores no coordinates. `src/lib/grid.ts` places the houses from block and lot: one square cluster of lots per block, blocks in rows about twice as wide as deep, one empty row or column of street between blocks. Blocks and lots sort by number, so block 2 comes before block 10.
+- The 3D view moves like a map. Left-drag rotates, right-drag or two fingers pan, and scroll zooms. Arrow keys pan, plus and minus zoom, brackets turn and Home resets once the canvas has focus. Buttons beside the scene zoom, turn and reset. Panning stays over the site. Reduced motion turns off the easing and flights. The 3D view uses three.js through `@react-three/fiber` and `@react-three/drei`. The Grid screen loads it lazily so the other screens never download it. The bars are instanced meshes. The scene redraws on demand, and the easing and flights ask for frames until they finish. Labels are DOM elements that follow their 3D positions, because drei's `Html` logs a React 19 unmount error.
+- Provider screens: subdivisions as cards (status, camera, house count, 7-day entries sparkline), add and edit a subdivision, deactivate or reactivate it, and each subdivision's HOA officers (Add user).
 - Charts use Dark Teal for registered and Sandy Clay for visitors, always with a legend or direct labels.
 - An inactive subdivision shows a banner on every guard and HOA officer screen, and hides the actions that save.
 - The team adds two mp3 files. `apps/dashboard/public/sounds/registered.mp3` is a chime. `apps/dashboard/public/sounds/not-registered.mp3` loops until the guard confirms. HTMLAudioElement plays them. A missing file fails quietly.
@@ -155,7 +164,7 @@ TypeScript types come from the OpenAPI schema. The Turborepo task `gen:types` du
 ## Deferred decisions
 
 - Business model and billing
-- Real user accounts
+- Logins and passwords for users
 - How test and demo data are created
 - Several gates per subdivision
 - Several vehicles per house

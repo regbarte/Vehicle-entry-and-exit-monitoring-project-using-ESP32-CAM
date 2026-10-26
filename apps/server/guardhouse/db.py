@@ -8,7 +8,7 @@ from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.asynchronous.database import AsyncDatabase
 
 from guardhouse.labels import house_label, residence_label
-from guardhouse.models import Entry, House, Subdivision, Vehicle
+from guardhouse.models import Entry, House, Subdivision, User, Vehicle
 
 Doc = dict[str, Any]
 
@@ -20,6 +20,7 @@ class Database:
         self.subdivisions: AsyncCollection[Doc] = self.db["subdivisions"]
         self.houses: AsyncCollection[Doc] = self.db["houses"]
         self.entries: AsyncCollection[Doc] = self.db["entries"]
+        self.users: AsyncCollection[Doc] = self.db["users"]
 
     async def create_indexes(self) -> None:
         await self.houses.create_index(
@@ -32,6 +33,8 @@ class Database:
             partialFilterExpression={"vehicle.plate": {"$type": "string"}},
         )
         await self.entries.create_index([("subdivisionId", ASCENDING), ("at", ASCENDING)])
+        # One account per email across every subdivision, so it can become a login.
+        await self.users.create_index("email", unique=True)
 
     async def close(self) -> None:
         await self.client.close()
@@ -75,6 +78,17 @@ def to_house(doc: Doc) -> House:
         else None,
         label=house_label(doc["block"], doc["lot"]),
         residence_label=residence_label(doc["ownerName"]),
+    )
+
+
+def to_user(doc: Doc) -> User:
+    return User(
+        id=str(doc["_id"]),
+        subdivision_id=str(doc["subdivisionId"]),
+        name=doc["name"],
+        email=doc["email"],
+        role=doc["role"],
+        created_at=doc["createdAt"],
     )
 
 

@@ -8,9 +8,10 @@ A guardhouse prototype for a subdivision gate. An ESP32-CAM photographs arriving
 
 ## Run the prototype
 
-1. Install Bun, Python 3.12, uv, MongoDB, and Tesseract OCR.
+1. Install Bun, Python 3.12, uv, and Tesseract OCR. You also need a MongoDB Atlas cluster.
 2. Run `bun install` and `uv sync`.
-3. Start local MongoDB, then run `bun dev`.
+3. Set `MONGO_URI` in `apps/server/.env` to your Atlas connection string (see
+   `apps/server/.env.example`), then run `bun dev`.
 4. Keep `mock_camera = true` in `apps/server/config.toml` while building the
    dashboard. Follow `apps/firmware/README.md` for hardware, then change it to
    `false` when the ESP32-CAM is reachable from the laptop.
