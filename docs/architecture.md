@@ -17,7 +17,7 @@ Laptop webcam --------------------------> Dashboard (laptop browser)
 - Bun workspaces and Turborepo run the JavaScript tasks. `bun dev` at the root opens the Turborepo TUI, with one pane for the server and one for the dashboard.
 - Python packages form a uv workspace. Each Python package also has a small `package.json` whose scripts call `uv run`, so Turborepo can run them.
 - The firmware has a `package.json` with one script, `deploy`. It uses mpremote to copy files to the board. The firmware has no dev pane.
-- MongoDB is already installed and running on each development device. Turborepo does not start it.
+- MongoDB runs in MongoDB Atlas. Each development device needs its IP in the Atlas Network Access list and `MONGO_URI` in `.env`. Turborepo does not start anything for it.
 - Python tools: ruff (lint and format), pyright (types), pytest.
 - JavaScript tools: Biome (lint and format), Vitest.
 - There is no CI yet.
