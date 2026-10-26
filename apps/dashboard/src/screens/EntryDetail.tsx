@@ -88,6 +88,7 @@ function Photo({ src, label }: { src: string | null; label: string }) {
 
   useEffect(() => {
     if (!open) return;
+    // The viewer covers the page, so Escape should always close it.
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };

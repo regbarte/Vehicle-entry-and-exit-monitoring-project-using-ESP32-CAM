@@ -102,7 +102,7 @@ function ConfirmPlate({
   );
   const exact = detection.suggestions.some((s) => s.distance === 0);
 
-  // A car with no exact registered match: sound the alarm until the guard confirms.
+  // Keep the alarm running until the guard handles a plate with no exact match.
   useEffect(() => {
     if (!exact && !readOnly) startNotRegistered();
     return stopNotRegistered;
@@ -111,8 +111,7 @@ function ConfirmPlate({
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!plate.trim()) return;
-    // mutateAsync, not mutate callbacks: a registered confirm removes this detection
-    // from the waiting list, which unmounts this form before per-call callbacks run.
+    // The waiting-list update unmounts this form, so read the result here.
     const result = await confirm
       .mutateAsync({ detectionId: detection.id, plate })
       .catch(() => null);

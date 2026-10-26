@@ -128,8 +128,7 @@ class Gates:
             value: seen_at for value, seen_at in gate.recent_plates.items() if seen_at >= cutoff
         }
         if plate in gate.recent_plates:
-            # Keep extending the window while the same car remains in view.
-            # It can be detected again only after it has been absent long enough.
+            # Move the expiry forward while the plate stays in view.
             gate.recent_plates[plate] = now
             return
         gate.recent_plates[plate] = now

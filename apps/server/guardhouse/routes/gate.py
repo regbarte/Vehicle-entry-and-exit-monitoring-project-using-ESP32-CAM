@@ -162,10 +162,7 @@ async def dismiss(
     detection = gate.waiting.pop(detection_id, None)
     if detection is None:
         raise HTTPException(404, "That detection is no longer waiting")
-    # Dismiss means the guard wants this camera view read again. Continuous mode
-    # normally suppresses a plate while it remains visible, so release this
-    # reading from that window and let the next camera pass create a fresh
-    # detection with a new frame and plate reading.
+    # Let continuous mode read the same car again after a dismissal.
     if plate := normalize(detection.plate_reading or ""):
         gate.recent_plates.pop(plate, None)
     gate.frames.pop(detection_id, None)

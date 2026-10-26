@@ -17,9 +17,7 @@ capture_resolution = "UXGA"
 # about 7-8 seconds when switching from the VGA live view.
 capture_timeout_seconds = 20.0
 
-# Central-subject brightness below which a scan briefly uses the ESP32-CAM LED.
-# This ignores dark outer background and considers the brighter part of the
-# gate area, so a well-lit plate does not trigger the LED unnecessarily.
+# Central gate-area brightness below which the LED is used.
 flash_dark_threshold = 30.0
 flash_settle_seconds = 0.6
 

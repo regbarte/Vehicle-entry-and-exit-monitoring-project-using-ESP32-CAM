@@ -59,9 +59,7 @@ class ContourPlateDetector:
             x, y, width, height = cv2.boundingRect(contour)
             area_ratio = (width * height) / image_area
             aspect = width / max(height, 1)
-            # A fixed guardhouse camera can see a plate close to the lens, so
-            # accept regions occupying up to 65% of the image. The earlier 15%
-            # ceiling rejected clear, near-field plates such as the demo card.
+            # A plate can fill most of the frame during guardhouse desk tests.
             if not 1.8 <= aspect <= 6.5 or not 0.002 <= area_ratio <= 0.65:
                 continue
             polygon = cv2.approxPolyDP(
@@ -72,9 +70,7 @@ class ContourPlateDetector:
             confidence = round(rectangularity * shape_score, 3)
             candidates.append(PlateBox(x, y, width, height, confidence))
 
-        # Low-light frames often lose the plate's outer edges completely. Find
-        # large bright, rotated rectangles as a fallback. Adding a little above
-        # Otsu's threshold separates a reflective plate from the dark vehicle.
+        # In low light, use the bright plate body when its edges disappear.
         otsu = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[0]
         _, bright = cv2.threshold(gray, min(245, otsu + 15), 255, cv2.THRESH_BINARY)
         kernel = cv2.getStructuringElement(
@@ -190,9 +186,7 @@ def read_plate(
     for box in boxes[:5]:
         crop = image[box.y : box.y + box.height, box.x : box.x + box.width]
         cleaned = clean_plate(crop)
-        # A perspective-corrected plate is sometimes classified by Tesseract
-        # as one word rather than one text line. Try the strict line mode first,
-        # then the single-word modes that work better for tilted demo plates.
+        # Try line mode first, then word modes for a skewed crop.
         for page_mode in (7, 8, 13):
             text = pytesseract.image_to_string(
                 cleaned,

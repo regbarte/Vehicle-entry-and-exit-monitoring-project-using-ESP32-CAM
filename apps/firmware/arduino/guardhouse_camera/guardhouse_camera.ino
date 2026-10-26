@@ -49,15 +49,14 @@ void sendJpeg(framesize_t frameSize, size_t expectedWidth, size_t expectedHeight
     return;
   }
 
-  // The first frame after changing the OV2640 resolution can have the new JPEG
-  // dimensions but incomplete image data. Always discard that settling frame.
+  // OV2640 may return one incomplete frame after a resolution change.
   if (resolutionChanged) {
     camera_fb_t *settlingFrame = esp_camera_fb_get();
     if (settlingFrame != nullptr) esp_camera_fb_return(settlingFrame);
     delay(80);
   }
 
-  // Also reject any frame that does not have the requested dimensions.
+  // Do not send a stale frame from the previous resolution.
   camera_fb_t *frame = nullptr;
   for (int attempt = 0; attempt < 4; ++attempt) {
     frame = esp_camera_fb_get();
@@ -132,8 +131,7 @@ void initialiseCamera() {
   }
   currentFrameSize = FRAMESIZE_UXGA;
   sensor_t *sensor = esp_camera_sensor_get();
-  // Keep automatic exposure enabled, lift shadows slightly, and avoid the
-  // high contrast setting that made normal indoor light look nearly black.
+  // Exposure settings for the fixed gate position.
   sensor->set_brightness(sensor, 1);
   sensor->set_contrast(sensor, 0);
   sensor->set_saturation(sensor, -1);
