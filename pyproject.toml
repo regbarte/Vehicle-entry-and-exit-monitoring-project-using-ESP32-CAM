@@ -1,0 +1,2 @@
+[tool.uv.workspace]
+members = ["apps/server", "packages/plate-reader"]

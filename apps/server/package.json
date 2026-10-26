@@ -1,0 +1,11 @@
+{
+  "name": "@guardhouse/server",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "uv run fastapi dev guardhouse/main.py --port 8000",
+    "openapi": "uv run python -m guardhouse.openapi",
+    "test": "uv run pytest",
+    "lint": "uv run ruff check . && uv run pyright"
+  }
+}

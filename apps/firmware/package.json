@@ -1,0 +1,8 @@
+{
+  "name": "@guardhouse/firmware",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "deploy": "mpremote cp boot.py main.py : + cp -r lib :"
+  }
+}

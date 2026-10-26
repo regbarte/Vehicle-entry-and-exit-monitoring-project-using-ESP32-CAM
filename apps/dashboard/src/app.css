@@ -1,0 +1,49 @@
+@import "tailwindcss";
+@import "@fontsource/atkinson-hyperlegible-next/400.css";
+@import "@fontsource/atkinson-hyperlegible-next/500.css";
+@import "@fontsource/atkinson-hyperlegible-next/600.css";
+@import "@fontsource/atkinson-hyperlegible-next/700.css";
+@import "@fontsource/atkinson-hyperlegible-mono/500.css";
+@import "@fontsource/atkinson-hyperlegible-mono/600.css";
+
+@theme {
+  /* Atkinson Hyperlegible keeps look-alike characters (O and 0, I and 1, B and 8) apart. */
+  --font-sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
+
+  /* The palette from docs/architecture.md, with tints and shades for text and surfaces. */
+  --color-ink: #3a2e39; /* Shadow Grey */
+  --color-ink-soft: #6b5b69;
+  --color-ink-faint: #a69aa4;
+  --color-teal: #1e555c; /* Dark Teal */
+  --color-teal-deep: #153d42;
+  --color-teal-wash: #dceae9;
+  --color-almond: #f4d8cd; /* Almond Silk */
+  --color-paper: #f8f5ee; /* cream page background, from the design */
+  --color-clay: #edb183; /* Sandy Clay */
+  --color-clay-deep: #8a4b1d;
+  --color-clay-wash: #fbe7d8;
+  --color-line: #e3dccf;
+
+  /* Names the shadcn chart component expects, mapped onto the palette. */
+  --color-background: #ffffff;
+  --color-foreground: #3a2e39;
+  --color-muted: #f1eee8;
+  --color-muted-foreground: #6b5b69;
+  --color-border: #e3dccf;
+  --color-chart-1: #1e555c; /* registered */
+  --color-chart-2: #edb183; /* visitor */
+}
+
+@layer base {
+  html {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-teal);
+    outline-offset: 2px;
+  }
+}
