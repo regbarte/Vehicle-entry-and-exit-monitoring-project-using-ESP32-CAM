@@ -75,6 +75,20 @@ def test_scan_suggests_near_matches(client, sid, monkeypatch):
     ]
 
 
+def test_continuous_mode_keeps_an_unregistered_plate_reading(client, sid, monkeypatch):
+    monkeypatch.setattr("guardhouse.gate.mock_read_plate", lambda _frame: "NBC 1234")
+    gates = client.app.state.gates
+
+    client.portal.call(gates._continuous_detection, sid)
+    client.portal.call(gates._continuous_detection, sid)
+
+    waiting = client.get(f"/api/subdivisions/{sid}/waiting").json()
+    assert len(waiting) == 1
+    assert waiting[0]["source"] == "continuous"
+    assert waiting[0]["plateReading"] == "NBC 1234"
+    assert waiting[0]["suggestions"] == []
+
+
 def test_confirm_registered_saves_entry(client, sid, monkeypatch):
     add_house(client, sid)
     detection = scan_with_plate(client, sid, monkeypatch, "NBC 1235")
@@ -231,6 +245,20 @@ def test_dismiss_drops_detection(client, sid, monkeypatch):
     assert detection["plateReading"] is None
     assert client.delete(f"/api/subdivisions/{sid}/detections/{detection['id']}").status_code == 204
     assert client.get(f"/api/subdivisions/{sid}/waiting").json() == []
+
+
+def test_dismiss_allows_continuous_mode_to_read_same_plate_again(client, sid, monkeypatch):
+    monkeypatch.setattr("guardhouse.gate.mock_read_plate", lambda _frame: "ABC 2468")
+    gates = client.app.state.gates
+
+    client.portal.call(gates._continuous_detection, sid)
+    [first] = client.get(f"/api/subdivisions/{sid}/waiting").json()
+    assert client.delete(f"/api/subdivisions/{sid}/detections/{first['id']}").status_code == 204
+
+    client.portal.call(gates._continuous_detection, sid)
+    [second] = client.get(f"/api/subdivisions/{sid}/waiting").json()
+    assert second["id"] != first["id"]
+    assert second["plateReading"] == "ABC 2468"
 
 
 def test_camera_preview_is_a_jpeg(client, sid):

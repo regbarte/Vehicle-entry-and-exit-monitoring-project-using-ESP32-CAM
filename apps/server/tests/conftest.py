@@ -13,7 +13,12 @@ TEST_DB = "guardhouse_test"
 
 @pytest.fixture
 def client():
-    settings = Settings(mongo_db=TEST_DB, data_dir=Path(tempfile.mkdtemp()), mock_camera=True)
+    settings = Settings(
+        mongo_db=TEST_DB,
+        data_dir=Path(tempfile.mkdtemp()),
+        mock_camera=True,
+        continuous_mode_enabled=False,
+    )
     MongoClient(settings.mongo_uri).drop_database(TEST_DB)
     with TestClient(create_app(settings)) as test_client:
         yield test_client

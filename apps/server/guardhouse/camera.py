@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Protocol
 
+import httpx
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -26,6 +27,39 @@ class Camera(Protocol):
     async def capture(self) -> bytes: ...
     async def preview(self) -> bytes: ...
     async def status(self) -> CameraReport: ...
+    async def set_flash(self, on: bool) -> None: ...
+
+
+class HttpCamera:
+    """Client for the ESP32-CAM HTTP endpoints."""
+
+    def __init__(self, base_url: str, capture_timeout_seconds: float = 20.0) -> None:
+        self._base_url = base_url.rstrip("/")
+        self._capture_timeout_seconds = capture_timeout_seconds
+
+    async def _get(self, path: str, timeout: float = 8.0) -> httpx.Response:
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                response = await client.get(self._base_url + path)
+                response.raise_for_status()
+                return response
+        except httpx.TimeoutException as error:
+            raise TimeoutError(f"The gate camera timed out at {path}") from error
+
+    async def capture(self) -> bytes:
+        return (await self._get("/capture", self._capture_timeout_seconds)).content
+
+    async def preview(self) -> bytes:
+        return (await self._get("/preview")).content
+
+    async def status(self) -> CameraReport:
+        data = (await self._get("/status")).json()
+        return CameraReport(
+            uptime_seconds=int(data["uptimeSeconds"]), signal_dbm=int(data["signalDbm"])
+        )
+
+    async def set_flash(self, on: bool) -> None:
+        await self._get("/flash/on" if on else "/flash/off", 3.0)
 
 
 _STARTED = time.monotonic()
@@ -111,6 +145,9 @@ class MockCamera:
             uptime_seconds=int(time.monotonic() - _STARTED),
             signal_dbm=random.randint(-67, -55),
         )
+
+    async def set_flash(self, on: bool) -> None:
+        return None
 
 
 def mock_read_plate(jpeg: bytes) -> str | None:

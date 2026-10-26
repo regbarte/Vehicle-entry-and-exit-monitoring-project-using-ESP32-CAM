@@ -37,7 +37,7 @@ export function Gate() {
           disabled={readOnly || scan.isPending}
           onClick={() => scan.mutate()}
         >
-          {scan.isPending ? "Scanning…" : "Scan"}
+          {scan.isPending ? "Scanning…" : "Manual scan"}
         </Button>
         <ErrorNote error={scan.error} />
         <WaitingList detections={next} />
@@ -78,7 +78,7 @@ function NoCar({ loading }: { loading: boolean }) {
       <p className="text-lg font-medium">{loading ? "Loading…" : "No car waiting"}</p>
       {!loading && (
         <p className="mt-1 max-w-xs text-sm text-ink-soft">
-          When a car stops at the gate, press Scan to read its plate.
+          Continuous mode is watching for the next vehicle. Manual scan is available if it misses.
         </p>
       )}
     </div>
@@ -102,7 +102,7 @@ function ConfirmPlate({
   );
   const exact = detection.suggestions.some((s) => s.distance === 0);
 
-  // A car with no exact registered match: sound the alarm until the guard confirms.
+  // Keep the alarm running until the guard handles a plate with no exact match.
   useEffect(() => {
     if (!exact && !readOnly) startNotRegistered();
     return stopNotRegistered;
@@ -111,8 +111,7 @@ function ConfirmPlate({
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!plate.trim()) return;
-    // mutateAsync, not mutate callbacks: a registered confirm removes this detection
-    // from the waiting list, which unmounts this form before per-call callbacks run.
+    // The waiting-list update unmounts this form, so read the result here.
     const result = await confirm
       .mutateAsync({ detectionId: detection.id, plate })
       .catch(() => null);
@@ -145,8 +144,8 @@ function ConfirmPlate({
       <div className="flex flex-col gap-2">
         <label htmlFor="plate" className="text-sm font-medium">
           {detection.plateReading
-            ? "Plate reading. Check it against the car, and correct it if needed."
-            : "No plate found in the photo. Type the plate."}
+            ? "Detected plate. Confirm it, or correct the text before checking the registry."
+            : "The plate could not be read. Enter it manually before checking the registry."}
         </label>
         <input
           id="plate"
@@ -193,7 +192,7 @@ function ConfirmPlate({
           className="flex-1"
           disabled={readOnly || confirm.isPending || !plate.trim()}
         >
-          {confirm.isPending ? "Checking…" : "Confirm plate"}
+          {confirm.isPending ? "Checking…" : "Confirm and check registry"}
         </Button>
         <Button
           variant="quiet"
