@@ -30,3 +30,9 @@ camera_poll_seconds = 5.0
 # Use the fake camera and fake plate reader for development. Set false after
 # saving the real camera's http://IP address on the subdivision.
 mock_camera = false
+
+# Serial port of the boom barrier Arduino, for example /dev/cu.usbmodem1101.
+# Empty uses a fake barrier, so the dashboard works without hardware.
+barrier_port = ""
+# The subdivision whose gate the barrier belongs to.
+barrier_subdivision_id = ""

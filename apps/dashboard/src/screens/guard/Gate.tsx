@@ -2,6 +2,7 @@ import type { ConfirmResult, Detection, Entry } from "@guardhouse/api-types";
 import { type FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router";
 import { useConfirm, useDismiss, useScan, useWaiting } from "../../api/queries";
+import { BarrierControl } from "../../components/BarrierControl";
 import { CameraView } from "../../components/CameraView";
 import { useWorkspace } from "../../components/Shell";
 import { Button, ErrorNote, Plate } from "../../components/ui";
@@ -40,6 +41,7 @@ export function Gate() {
           {scan.isPending ? "Scanning…" : "Manual scan"}
         </Button>
         <ErrorNote error={scan.error} />
+        <BarrierControl sid={sid} readOnly={readOnly} />
         <WaitingList detections={next} />
       </section>
 

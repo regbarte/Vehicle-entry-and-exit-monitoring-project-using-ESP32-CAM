@@ -181,7 +181,12 @@ export function useEntries(sid: string, filters: EntryFilters) {
 export function useInside(sid: string) {
   return useQuery({
     queryKey: keys.inside(sid),
-    queryFn: () => unwrap(api.GET("/api/subdivisions/{sid}/entries/inside", { params: path(sid) })),
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/subdivisions/{sid}/entries/inside", {
+          params: path(sid),
+        }),
+      ),
   });
 }
 
@@ -242,7 +247,12 @@ export function useHourlyStats(sid: string, days: StatsDays) {
 export function usePurposeStats(sid: string) {
   return useQuery({
     queryKey: keys.statsPurposes(sid),
-    queryFn: () => unwrap(api.GET("/api/subdivisions/{sid}/stats/purposes", { params: path(sid) })),
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/subdivisions/{sid}/stats/purposes", {
+          params: path(sid),
+        }),
+      ),
   });
 }
 
@@ -266,7 +276,9 @@ export function useHouses(sid: string, q: string) {
     queryKey: keys.houses(sid, q),
     queryFn: () =>
       unwrap(
-        api.GET("/api/subdivisions/{sid}/houses", { params: { path: { sid }, query: { q } } }),
+        api.GET("/api/subdivisions/{sid}/houses", {
+          params: { path: { sid }, query: { q } },
+        }),
       ),
     placeholderData: (previous) => previous,
   });
@@ -323,5 +335,30 @@ export function useAddUser(sid: string) {
     mutationFn: (body: UserCreate) =>
       unwrap(api.POST("/api/subdivisions/{sid}/users", { params: path(sid), body })),
     onSuccess: () => client.invalidateQueries({ queryKey: keys.users(sid) }),
+  });
+}
+
+// Barrier
+
+export function useBarrier(sid: string) {
+  return useQuery({
+    queryKey: keys.barrier(sid),
+    queryFn: () => unwrap(api.GET("/api/subdivisions/{sid}/barrier", { params: path(sid) })),
+  });
+}
+
+export function useBarrierCommand(sid: string) {
+  return useMutation({
+    mutationFn: (command: "open" | "close") =>
+      unwrap(
+        command === "open"
+          ? api.POST("/api/subdivisions/{sid}/barrier/open", {
+              params: path(sid),
+            })
+          : api.POST("/api/subdivisions/{sid}/barrier/close", {
+              params: path(sid),
+            }),
+      ),
+    // No onSuccess: the SSE `barrier` event updates the cache once the Arduino has moved.
   });
 }

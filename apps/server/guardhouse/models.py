@@ -229,7 +229,22 @@ class CameraEvent(ApiModel):
     camera: CameraStatus
 
 
-GateEvent = Annotated[DetectionEvent | EntryEvent | CameraEvent, Field(discriminator="type")]
+# The boom barrier's state comes from the Arduino; "unknown" until it answers.
+BarrierState = Literal["open", "closed", "unknown"]
+
+
+class BarrierStatus(ApiModel):
+    state: BarrierState
+
+
+class BarrierEvent(ApiModel):
+    type: Literal["barrier"]
+    state: BarrierState
+
+
+GateEvent = Annotated[
+    DetectionEvent | EntryEvent | CameraEvent | BarrierEvent, Field(discriminator="type")
+]
 
 
 # Stats: totals only. Days and hours are in the server laptop's local time.

@@ -7,6 +7,10 @@ FastAPI app on the guardhouse laptop. It gets photos from the ESP32-CAM, reads p
 - `guardhouse/camera.py` has both a mock camera and the ESP32-CAM HTTP client.
   Develop with `mock_camera = true`; set it to `false` to use each
   subdivision's configured camera address and the OpenCV/Tesseract reader.
+- `guardhouse/barrier.py` keeps the boom barrier Arduino's serial port open,
+  sends it `OPEN`, `CLOSE` and `STATUS`, and publishes a `barrier` event for
+  each `STATE:` line it answers. With no `BARRIER_PORT` in `.env`, it uses a
+  fake barrier.
 - Photos go under `data/`, which git ignores.
 
 Run with `bun dev` from the repo root, or `uv run fastapi dev guardhouse/main.py --port 8000` here. Set `MONGO_URI` in `.env` to your Atlas connection string (see `.env.example`). Tests run against that cluster; they use and drop the `guardhouse_test` database.
