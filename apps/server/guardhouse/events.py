@@ -1,9 +1,9 @@
 import asyncio
 from collections import defaultdict
 
-from guardhouse.models import CameraEvent, DetectionEvent, EntryEvent
+from guardhouse.models import BarrierEvent, CameraEvent, DetectionEvent, EntryEvent
 
-Event = DetectionEvent | EntryEvent | CameraEvent
+Event = DetectionEvent | EntryEvent | CameraEvent | BarrierEvent
 
 
 class EventHub:

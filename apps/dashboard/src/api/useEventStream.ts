@@ -5,7 +5,7 @@ import { applyEvent } from "./events";
 
 export type StreamState = "connecting" | "live" | "reconnecting";
 
-const EVENT_TYPES: GateEvent["type"][] = ["detection", "entry", "camera"];
+const EVENT_TYPES: GateEvent["type"][] = ["detection", "entry", "camera", "barrier"];
 
 /** Open the subdivision's event stream once and keep the query cache current.
  * After a dropped connection it refetches everything for the subdivision. */
@@ -21,7 +21,9 @@ export function useEventStream(sid: string): StreamState {
       setState("live");
       if (dropped) {
         dropped = false;
-        client.invalidateQueries({ predicate: (query) => query.queryKey[1] === sid });
+        client.invalidateQueries({
+          predicate: (query) => query.queryKey[1] === sid,
+        });
       }
     };
     source.onerror = () => {

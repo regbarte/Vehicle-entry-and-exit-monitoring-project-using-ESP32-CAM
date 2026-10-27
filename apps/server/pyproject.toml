@@ -10,6 +10,7 @@ dependencies = [
     "plate-reader",
     "pydantic-settings>=2.16.1",
     "pymongo>=4.19.0",
+    "pyserial>=3.5",
     "python-multipart>=0.0.32",
 ]
 

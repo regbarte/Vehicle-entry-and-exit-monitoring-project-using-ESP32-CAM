@@ -1,12 +1,14 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from guardhouse.barrier import Barrier
 from guardhouse.db import Database
 from guardhouse.events import EventHub
 from guardhouse.gate import Gates, camera_poller
-from guardhouse.routes import entries, gate, houses, stats, subdivisions
+from guardhouse.routes import barrier, entries, gate, houses, stats, subdivisions
 from guardhouse.settings import Settings, settings
 
 
@@ -15,12 +17,21 @@ def create_app(config: Settings = settings) -> FastAPI:
     async def lifespan(app: FastAPI):
         db = Database(config.mongo_uri, config.mongo_db)
         await db.create_indexes()
+
         app.state.settings = config
         app.state.db = db
+
         app.state.hub = EventHub()
         app.state.gates = Gates(db, app.state.hub, config)
+
+        app.state.barrier = Barrier(
+            config.barrier_port, config.barrier_subdivision_id, app.state.hub
+        )
+
+        listener = asyncio.create_task(app.state.barrier.run())
         async with camera_poller(app.state.gates):
             yield
+        listener.cancel()
         await db.close()
 
     app = FastAPI(title="Guardhouse", version="0.1.0", lifespan=lifespan)
@@ -29,6 +40,7 @@ def create_app(config: Settings = settings) -> FastAPI:
     app.include_router(entries.router)
     app.include_router(houses.router)
     app.include_router(stats.router)
+    app.include_router(barrier.router)
 
     config.data_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/files", StaticFiles(directory=config.data_dir), name="files")

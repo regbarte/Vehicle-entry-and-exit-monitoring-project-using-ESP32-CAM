@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     near_match_distance: int = 1
     camera_poll_seconds: float = 5.0
     mock_camera: bool = True
+    barrier_port: str = ""
+    barrier_subdivision_id: str = ""
 
     @classmethod
     def settings_customise_sources(

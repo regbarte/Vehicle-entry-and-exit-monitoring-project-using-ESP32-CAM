@@ -29,5 +29,8 @@ export function applyEvent(client: QueryClient, sid: string, event: GateEvent) {
     case "camera":
       client.setQueryData(keys.camera(sid), event.camera);
       break;
+    case "barrier":
+      client.setQueryData(keys.barrier(sid), { state: event.state });
+      break;
   }
 }
