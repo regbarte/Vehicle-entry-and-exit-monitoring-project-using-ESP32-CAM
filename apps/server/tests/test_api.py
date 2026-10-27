@@ -329,3 +329,52 @@ def test_house_stats_are_scoped_to_their_subdivision(client, sid, monkeypatch):
     stats = client.get(f"/api/subdivisions/{other}/stats/houses").json()
     assert stats["houses"] == []
     assert stats["blocks"] == []
+
+
+def add_user(client: TestClient, sid: str, **fields) -> dict:
+    body = {"name": "Maria  Santos", "email": "Maria@Example.test", "role": "hoa_officer"} | fields
+    response = client.post(f"/api/subdivisions/{sid}/users", json=body)
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def test_add_and_list_users(client, sid):
+    officer = add_user(client, sid)
+    assert officer["name"] == "Maria Santos"
+    assert officer["email"] == "maria@example.test"
+    add_user(client, sid, name="Pedro Reyes", email="pedro@example.test", role="guard")
+    users = client.get(f"/api/subdivisions/{sid}/users").json()
+    assert [u["role"] for u in users] == ["guard", "hoa_officer"]
+    guards = client.get(f"/api/subdivisions/{sid}/users", params={"role": "guard"}).json()
+    assert [u["name"] for u in guards] == ["Pedro Reyes"]
+
+
+def test_user_email_is_unique_across_subdivisions(client, sid):
+    add_user(client, sid)
+    other = client.post(
+        "/api/subdivisions", json={"name": "Other", "cameraUrl": "http://other.local"}
+    ).json()["id"]
+    response = client.post(
+        f"/api/subdivisions/{other}/users",
+        json={"name": "M S", "email": "maria@example.test", "role": "guard"},
+    )
+    assert response.status_code == 409
+    assert client.get(f"/api/subdivisions/{other}/users").json() == []
+
+
+def test_user_needs_a_known_role_and_email(client, sid):
+    for body in (
+        {"name": "A", "email": "a@example.test", "role": "provider"},
+        {"name": "A", "email": "not-an-email", "role": "guard"},
+    ):
+        assert client.post(f"/api/subdivisions/{sid}/users", json=body).status_code == 422
+
+
+def test_inactive_subdivision_cannot_add_users(client, sid):
+    client.patch(f"/api/subdivisions/{sid}", json={"active": False})
+    response = client.post(
+        f"/api/subdivisions/{sid}/users",
+        json={"name": "A", "email": "a@example.test", "role": "guard"},
+    )
+    assert response.status_code == 409
+    assert client.get(f"/api/subdivisions/{sid}/users").status_code == 200

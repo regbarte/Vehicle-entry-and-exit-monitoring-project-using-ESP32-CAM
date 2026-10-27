@@ -40,7 +40,7 @@ JavaScript packages use Bun workspaces, and Turborepo runs tasks across the dash
 - Don't commit secrets. Wi-Fi credentials go in `apps/firmware/arduino/guardhouse_camera/wifi_secrets.h` and server settings in `.env`; git ignores both.
 - The server runs one worker process. The waiting lists and the event hub live in memory.
 - The role and subdivision are stored in the browser only. They are not security; don't treat them as access control.
-- Business models, billing and real accounts are out of scope for now.
+- Business models, billing, logins and passwords are out of scope for now. Users are stored without passwords.
 
 ## Commands
 

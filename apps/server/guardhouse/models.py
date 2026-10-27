@@ -55,6 +55,28 @@ class SubdivisionUpdate(ApiModel):
     active: bool | None = None
 
 
+# Users: the accounts that will sign in once the cloud side has logins. The
+# provider adds a subdivision's HOA officers; an HOA officer adds guards and other
+# HOA officers. The prototype stores them but has no passwords yet.
+
+UserRole = Literal["guard", "hoa_officer"]
+
+
+class User(ApiModel):
+    id: str
+    subdivision_id: str
+    name: str
+    email: str
+    role: UserRole
+    created_at: datetime
+
+
+class UserCreate(ApiModel):
+    name: Annotated[str, Field(min_length=1)]
+    email: Annotated[str, Field(min_length=3, pattern=r"^[^@\s]+@[^@\s]+$")]
+    role: UserRole
+
+
 # Registry
 
 

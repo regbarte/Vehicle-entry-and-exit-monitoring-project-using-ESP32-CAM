@@ -383,6 +383,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/subdivisions/{sid}/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Users */
+        get: operations["list_users_api_subdivisions__sid__users_get"];
+        put?: never;
+        /** Add User */
+        post: operations["add_user_api_subdivisions__sid__users_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/subdivisions/{sid}/barrier": {
         parameters: {
             query?: never;
@@ -895,6 +913,39 @@ export interface components {
              * @description 24 rows, hour 0 to 23.
              */
             byHour: components["schemas"]["HourCount"][];
+        };
+        /** User */
+        User: {
+            /** Id */
+            id: string;
+            /** Subdivisionid */
+            subdivisionId: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "guard" | "hoa_officer";
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
+        /** UserCreate */
+        UserCreate: {
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "guard" | "hoa_officer";
         };
         /** ValidationError */
         ValidationError: {
@@ -1705,6 +1756,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HouseStats"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_users_api_subdivisions__sid__users_get: {
+        parameters: {
+            query?: {
+                role?: ("guard" | "hoa_officer") | null;
+            };
+            header?: never;
+            path: {
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_user_api_subdivisions__sid__users_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
                 };
             };
             /** @description Validation Error */

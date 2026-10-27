@@ -7,6 +7,7 @@ import type {
   Purpose,
   SubdivisionCreate,
   SubdivisionUpdate,
+  UserCreate,
 } from "@guardhouse/api-types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, unwrap } from "./client";
@@ -316,6 +317,24 @@ export function useRemoveHouse(sid: string) {
         }),
       ),
     onSuccess: () => client.invalidateQueries({ queryKey: keys.houses(sid) }),
+  });
+}
+
+// Users: the provider adds HOA officers; an HOA officer adds guards and HOA officers
+
+export function useUsers(sid: string) {
+  return useQuery({
+    queryKey: keys.users(sid),
+    queryFn: () => unwrap(api.GET("/api/subdivisions/{sid}/users", { params: path(sid) })),
+  });
+}
+
+export function useAddUser(sid: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (body: UserCreate) =>
+      unwrap(api.POST("/api/subdivisions/{sid}/users", { params: path(sid), body })),
+    onSuccess: () => client.invalidateQueries({ queryKey: keys.users(sid) }),
   });
 }
 

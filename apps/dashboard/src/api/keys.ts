@@ -11,6 +11,7 @@ export const keys = {
   entry: (sid: string, id: string) => ["entry", sid, id] as const,
   houses: (sid: string, q?: string) =>
     q === undefined ? (["houses", sid] as const) : (["houses", sid, q] as const),
+  users: (sid: string) => ["users", sid] as const,
   stats: (sid: string) => ["stats", sid] as const,
   statsToday: (sid: string) => ["stats", sid, "today"] as const,
   statsHourly: (sid: string, days: StatsDays) => ["stats", sid, "hourly", days] as const,

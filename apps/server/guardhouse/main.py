@@ -8,7 +8,7 @@ from guardhouse.barrier import Barrier
 from guardhouse.db import Database
 from guardhouse.events import EventHub
 from guardhouse.gate import Gates, camera_poller
-from guardhouse.routes import barrier, entries, gate, houses, stats, subdivisions
+from guardhouse.routes import barrier, entries, gate, houses, stats, subdivisions, users
 from guardhouse.settings import Settings, settings
 
 
@@ -40,6 +40,7 @@ def create_app(config: Settings = settings) -> FastAPI:
     app.include_router(entries.router)
     app.include_router(houses.router)
     app.include_router(stats.router)
+    app.include_router(users.router)
     app.include_router(barrier.router)
 
     config.data_dir.mkdir(parents=True, exist_ok=True)
