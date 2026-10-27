@@ -1,5 +1,5 @@
 # Intent: guardhouse vehicle check
-Author: Wendell Terence Dador. Status: draft.
+Author: Wendell Terence Dador. Status: approved.
 
 ## Problem
 Guards at the subdivision gate check each arriving car by eye. They tell a resident's car from a visitor's by memory, and they write visitor details by hand in a logbook.
