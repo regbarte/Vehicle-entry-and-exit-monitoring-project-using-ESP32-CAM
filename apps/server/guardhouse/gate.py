@@ -67,11 +67,12 @@ class Gates:
         return HttpCamera(subdivision["cameraUrl"], self._settings.capture_timeout_seconds)
 
     async def capture_frame(self, sid: str) -> bytes:
-        """Capture UXGA, briefly using reduced flash only when the preview is dark."""
+        """Capture UXGA and retry with the LED when the full frame is dark."""
         gate = self.get(sid)
         async with gate.camera_lock:
             camera = await self.camera(sid)
             use_flash = False
+            flash_enabled = False
             if not self._settings.mock_camera:
                 preview = await camera.preview()
                 brightness = await run_in_threadpool(image_brightness, preview)
@@ -79,11 +80,23 @@ class Gates:
             try:
                 if use_flash:
                     await camera.set_flash(True)
+                    flash_enabled = True
                     await asyncio.sleep(self._settings.flash_settle_seconds)
                 async with asyncio.timeout(self._settings.capture_timeout_seconds + 1):
-                    return await camera.capture()
+                    frame = await camera.capture()
+
+                # VGA exposure can look acceptable while the UXGA frame is dark.
+                if not self._settings.mock_camera and not use_flash:
+                    brightness = await run_in_threadpool(image_brightness, frame)
+                    if brightness < self._settings.flash_dark_threshold:
+                        await camera.set_flash(True)
+                        flash_enabled = True
+                        await asyncio.sleep(self._settings.flash_settle_seconds)
+                        async with asyncio.timeout(self._settings.capture_timeout_seconds + 1):
+                            frame = await camera.capture()
+                return frame
             finally:
-                if use_flash:
+                if flash_enabled:
                     with contextlib.suppress(Exception):
                         await camera.set_flash(False)
 

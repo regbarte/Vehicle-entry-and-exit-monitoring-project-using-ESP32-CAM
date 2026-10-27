@@ -19,7 +19,7 @@ capture_timeout_seconds = 20.0
 
 # Central gate-area brightness below which the LED is used.
 flash_dark_threshold = 30.0
-flash_settle_seconds = 0.6
+flash_settle_seconds = 1.0
 
 # Edits a registered plate may differ from the plate reading and still be offered.
 near_match_distance = 1

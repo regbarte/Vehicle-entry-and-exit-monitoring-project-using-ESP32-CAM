@@ -89,6 +89,40 @@ def test_continuous_mode_keeps_an_unregistered_plate_reading(client, sid, monkey
     assert waiting[0]["suggestions"] == []
 
 
+def test_capture_retries_with_flash_when_uxga_is_darker_than_preview(client, sid, monkeypatch):
+    class Camera:
+        def __init__(self):
+            self.captures = 0
+            self.flash = []
+
+        async def preview(self):
+            return b"bright-preview"
+
+        async def capture(self):
+            self.captures += 1
+            return b"dark-frame" if self.captures == 1 else b"lit-frame"
+
+        async def set_flash(self, on):
+            self.flash.append(on)
+
+    camera = Camera()
+    gates = client.app.state.gates
+
+    async def get_camera(_sid):
+        return camera
+
+    brightness = iter([80.0, 9.0])
+    monkeypatch.setattr(gates._settings, "mock_camera", False)
+    monkeypatch.setattr(gates._settings, "flash_settle_seconds", 0)
+    monkeypatch.setattr(gates, "camera", get_camera)
+    monkeypatch.setattr("guardhouse.gate.image_brightness", lambda _frame: next(brightness))
+
+    frame = client.portal.call(gates.capture_frame, sid)
+    assert frame == b"lit-frame"
+    assert camera.captures == 2
+    assert camera.flash == [True, False]
+
+
 def test_confirm_registered_saves_entry(client, sid, monkeypatch):
     add_house(client, sid)
     detection = scan_with_plate(client, sid, monkeypatch, "NBC 1235")
